@@ -1,2 +1,2 @@
-# SVDailyPursuit
-Daily Pursuit
+# Happy Day
+Every day is happy
