@@ -56,7 +56,7 @@
   font-family: var(--font-sans);
   color-scheme: light;
   color: var(--color-ink);
-  background: var(--color-ash-300);
+  background: var(--color-ground);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
