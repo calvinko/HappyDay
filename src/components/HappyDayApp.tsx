@@ -3,16 +3,26 @@ import { HISTORY, HYMNS, RECENT, TODAY, VERSES } from '../lib/data'
 
 type Screen = 'home' | 'passage' | 'resources' | 'hymn' | 'profile'
 
+export type Group = { id: string; label: string }
+
 type Props = {
   homeLayout?: 'poster' | 'cards'
   navModel?: 'tabs' | 'top'
+  groups?: Group[]
 }
 
 const KICKER = 'text-[11px] font-bold tracking-[0.14em] text-accent-700'
 const ICON_BTN =
   'flex h-[30px] w-[30px] items-center justify-center border-2 border-ink font-bold hover:bg-surface'
 
+const DEFAULT_GROUPS: Group[] = [
+  { id: 'sj_senior', label: 'SJ 長者' },
+  { id: 'sf_senior', label: 'SF 長者' },
+  { id: 'bra_senior', label: '巴西長者' },
+]
+
 const NAME_KEY = 'happyday.name'
+const GROUP_KEY = 'happyday.group'
 
 function readName(): string {
   try {
@@ -31,7 +41,28 @@ function writeName(value: string) {
   }
 }
 
-function HappyDayApp({ homeLayout = 'poster', navModel = 'tabs' }: Props) {
+function readGroup(): string {
+  try {
+    return localStorage.getItem(GROUP_KEY) ?? ''
+  } catch {
+    return ''
+  }
+}
+
+function writeGroup(value: string) {
+  try {
+    if (value) localStorage.setItem(GROUP_KEY, value)
+    else localStorage.removeItem(GROUP_KEY)
+  } catch {
+    /* private mode or blocked storage — the group just won't persist */
+  }
+}
+
+function HappyDayApp({
+  homeLayout = 'poster',
+  navModel = 'tabs',
+  groups = DEFAULT_GROUPS,
+}: Props) {
   const [screen, setScreen] = useState<Screen>('home')
   const [hymnIdx, setHymnIdx] = useState(0)
   const [from, setFrom] = useState<Screen>('home')
@@ -41,7 +72,10 @@ function HappyDayApp({ homeLayout = 'poster', navModel = 'tabs' }: Props) {
   const [pct, setPct] = useState(12)
   const [reminder, setReminder] = useState(true)
   const [name, setName] = useState(() => readName())
+  const [group, setGroup] = useState(() => readGroup())
   const [draft, setDraft] = useState('')
+  const [draftGroup, setDraftGroup] = useState('')
+  const [signInStep, setSignInStep] = useState<'group' | 'name'>('group')
 
   useEffect(() => {
     if (!playing) return
@@ -58,23 +92,37 @@ function HappyDayApp({ homeLayout = 'poster', navModel = 'tabs' }: Props) {
   const ss = Math.floor((pct * 2.4) % 60)
   const clock = `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`
 
+  const labelForGroup = (id: string) =>
+    groups.find((g) => g.id === id)?.label ?? id
+
   const openHymn = (i: number) => {
     setHymnIdx(i)
     setFrom(screen)
     setScreen('hymn')
   }
 
+  const chooseGroup = (id: string) => {
+    setDraftGroup(id)
+    setSignInStep('name')
+  }
+
   const signIn = () => {
     const clean = draft.trim().replace(/\s+/g, ' ')
-    if (!clean) return
+    if (!clean || !draftGroup) return
     setName(clean)
     writeName(clean)
+    setGroup(draftGroup)
+    writeGroup(draftGroup)
     setDraft('')
+    setDraftGroup('')
+    setSignInStep('group')
   }
 
   const signOut = () => {
     setName('')
     writeName('')
+    setDraftGroup('')
+    setSignInStep('group')
   }
 
   const grow = () => setSize((s) => Math.min(26, s + 2))
@@ -426,7 +474,41 @@ function HappyDayApp({ homeLayout = 'poster', navModel = 'tabs' }: Props) {
           </div>
         )}
 
-        {screen === 'profile' && !signedIn && (
+        {screen === 'profile' && !signedIn && signInStep === 'group' && (
+          <div className="animate-hd-in flex min-h-full flex-col px-[18px] pt-[18px] pb-7">
+            <div className={KICKER}>ME</div>
+            <h1 className="mt-2.5 text-[40px] leading-[0.98] font-extrabold tracking-[-0.02em]">
+              Who&rsquo;s reading?
+            </h1>
+            <p className="mt-3.5 text-base leading-relaxed text-ash-800 [text-wrap:pretty]">
+              Select your group to get started.
+            </p>
+
+            <div className="mt-7 border-t-2 border-ink">
+              {groups.map((g) => (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => chooseGroup(g.id)}
+                  className="flex w-full items-center gap-3.5 border-b border-ink/40 py-4 text-left hover:bg-surface"
+                >
+                  <span className="flex-1 text-[17px] font-bold">
+                    {g.label}
+                  </span>
+                  <span className="text-[13px]">&#9654;</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-auto border-t-2 border-ink pt-3.5">
+              <span className="text-[13px] leading-snug font-medium text-ash-800">
+                Sharing a device at church? Pick the group meeting right now.
+              </span>
+            </div>
+          </div>
+        )}
+
+        {screen === 'profile' && !signedIn && signInStep === 'name' && (
           <form
             className="animate-hd-in flex min-h-full flex-col px-[18px] pt-[18px] pb-7"
             onSubmit={(e) => {
@@ -434,7 +516,16 @@ function HappyDayApp({ homeLayout = 'poster', navModel = 'tabs' }: Props) {
               signIn()
             }}
           >
-            <div className={KICKER}>ME</div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setSignInStep('group')}
+                className="text-xl leading-none"
+              >
+                &larr;
+              </button>
+              <span className={KICKER}>ME</span>
+            </div>
             <h1 className="mt-2.5 text-[40px] leading-[0.98] font-extrabold tracking-[-0.02em]">
               Who&rsquo;s reading?
             </h1>
@@ -444,6 +535,23 @@ function HappyDayApp({ homeLayout = 'poster', navModel = 'tabs' }: Props) {
             </p>
 
             <div className="mt-7 border-t-2 border-ink pt-5">
+              <div className="mb-4 flex items-center justify-between">
+                <span className="text-[11px] font-bold tracking-[0.12em] text-ash-700">
+                  GROUP
+                </span>
+                <span className="flex items-center gap-2.5">
+                  <span className="text-[13px] font-bold">
+                    {labelForGroup(draftGroup)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSignInStep('group')}
+                    className="text-xs font-bold tracking-[0.08em] text-accent-700"
+                  >
+                    CHANGE
+                  </button>
+                </span>
+              </div>
               <label
                 htmlFor="hd-name"
                 className="block text-[11px] font-bold tracking-[0.12em] text-ash-700"
@@ -461,6 +569,7 @@ function HappyDayApp({ homeLayout = 'poster', navModel = 'tabs' }: Props) {
                 spellCheck={false}
                 maxLength={40}
                 placeholder="Grace Lim"
+                autoFocus
                 className="mt-2.5 w-full border-2 border-ink bg-transparent px-3.5 py-3.5 text-[22px] font-bold tracking-[-0.01em] placeholder:font-medium placeholder:text-ash-400 focus:bg-surface"
               />
               <button
@@ -493,6 +602,7 @@ function HappyDayApp({ homeLayout = 'poster', navModel = 'tabs' }: Props) {
             </h1>
             <p className="mt-1.5 mb-5 text-[13px] font-medium text-ash-700">
               {TODAY.memberMeta}
+              {group && ` · ${labelForGroup(group)}`}
             </p>
             <div className="mb-6 grid grid-cols-2 border-2 border-ink">
               <div className="border-r-2 border-ink p-4">
