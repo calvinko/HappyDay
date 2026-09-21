@@ -12,6 +12,25 @@ const KICKER = 'text-[11px] font-bold tracking-[0.14em] text-accent-700'
 const ICON_BTN =
   'flex h-[30px] w-[30px] items-center justify-center border-2 border-ink font-bold hover:bg-surface'
 
+const NAME_KEY = 'happyday.name'
+
+function readName(): string {
+  try {
+    return localStorage.getItem(NAME_KEY) ?? ''
+  } catch {
+    return ''
+  }
+}
+
+function writeName(value: string) {
+  try {
+    if (value) localStorage.setItem(NAME_KEY, value)
+    else localStorage.removeItem(NAME_KEY)
+  } catch {
+    /* private mode or blocked storage — the name just won't persist */
+  }
+}
+
 function HappyDayApp({ homeLayout = 'poster', navModel = 'tabs' }: Props) {
   const [screen, setScreen] = useState<Screen>('home')
   const [hymnIdx, setHymnIdx] = useState(0)
@@ -21,6 +40,8 @@ function HappyDayApp({ homeLayout = 'poster', navModel = 'tabs' }: Props) {
   const [playing, setPlaying] = useState(false)
   const [pct, setPct] = useState(12)
   const [reminder, setReminder] = useState(true)
+  const [name, setName] = useState(() => readName())
+  const [draft, setDraft] = useState('')
 
   useEffect(() => {
     if (!playing) return
@@ -30,6 +51,8 @@ function HappyDayApp({ homeLayout = 'poster', navModel = 'tabs' }: Props) {
 
   const hymn = HYMNS[hymnIdx]
   const streak = TODAY.baseStreak + (read ? 1 : 0)
+  const signedIn = name !== ''
+  const firstName = name.split(' ')[0]
   const chrome = screen !== 'passage' && screen !== 'hymn'
   const mm = Math.floor((pct * 2.4) / 60)
   const ss = Math.floor((pct * 2.4) % 60)
@@ -39,6 +62,19 @@ function HappyDayApp({ homeLayout = 'poster', navModel = 'tabs' }: Props) {
     setHymnIdx(i)
     setFrom(screen)
     setScreen('hymn')
+  }
+
+  const signIn = () => {
+    const clean = draft.trim().replace(/\s+/g, ' ')
+    if (!clean) return
+    setName(clean)
+    writeName(clean)
+    setDraft('')
+  }
+
+  const signOut = () => {
+    setName('')
+    writeName('')
   }
 
   const grow = () => setSize((s) => Math.min(26, s + 2))
@@ -154,7 +190,11 @@ function HappyDayApp({ homeLayout = 'poster', navModel = 'tabs' }: Props) {
               </span>
             </div>
             <h1 className="mt-2.5 mb-1 text-3xl leading-tight font-extrabold">
-              {read ? 'Good to see you again.' : 'Good morning, Grace.'}
+              {read
+                ? 'Good to see you again.'
+                : signedIn
+                  ? `Good morning, ${firstName}.`
+                  : 'Good morning.'}
             </h1>
             <p className="mb-[18px] text-sm font-medium text-ash-700">
               {streak} days in a row.
@@ -386,10 +426,70 @@ function HappyDayApp({ homeLayout = 'poster', navModel = 'tabs' }: Props) {
           </div>
         )}
 
-        {screen === 'profile' && (
+        {screen === 'profile' && !signedIn && (
+          <form
+            className="animate-hd-in flex min-h-full flex-col px-[18px] pt-[18px] pb-7"
+            onSubmit={(e) => {
+              e.preventDefault()
+              signIn()
+            }}
+          >
+            <div className={KICKER}>ME</div>
+            <h1 className="mt-2.5 text-[40px] leading-[0.98] font-extrabold tracking-[-0.02em]">
+              Who&rsquo;s reading?
+            </h1>
+            <p className="mt-3.5 text-base leading-relaxed text-ash-800 [text-wrap:pretty]">
+              Your name keeps your streak and your reading history together on
+              this device.
+            </p>
+
+            <div className="mt-7 border-t-2 border-ink pt-5">
+              <label
+                htmlFor="hd-name"
+                className="block text-[11px] font-bold tracking-[0.12em] text-ash-700"
+              >
+                YOUR NAME
+              </label>
+              <input
+                id="hd-name"
+                name="name"
+                type="text"
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                autoComplete="name"
+                autoCapitalize="words"
+                spellCheck={false}
+                maxLength={40}
+                placeholder="Grace Lim"
+                className="mt-2.5 w-full border-2 border-ink bg-transparent px-3.5 py-3.5 text-[22px] font-bold tracking-[-0.01em] placeholder:font-medium placeholder:text-ash-400 focus:bg-surface"
+              />
+              <button
+                type="submit"
+                disabled={draft.trim() === ''}
+                className="mt-3.5 flex w-full items-center gap-2.5 border-2 border-accent bg-accent px-4 py-[13px] text-left text-[15px] font-bold tracking-wide text-white hover:border-accent-600 hover:bg-accent-600 active:border-accent-700 active:bg-accent-700 disabled:cursor-not-allowed disabled:border-ash-400 disabled:bg-transparent disabled:text-ash-500"
+              >
+                <span className="flex-1">Continue</span>
+                <span className="text-lg">&rarr;</span>
+              </button>
+            </div>
+
+            <p className="mt-5 text-[13px] leading-snug font-medium text-ash-700">
+              No account and no password. Your name stays on this device.
+            </p>
+
+            <div className="mt-auto border-t-2 border-ink pt-3.5">
+              <span className="text-[13px] leading-snug font-medium text-ash-800">
+                Sharing a device at church? Your first name is enough.
+              </span>
+            </div>
+          </form>
+        )}
+
+        {screen === 'profile' && signedIn && (
           <div className="animate-hd-in px-[18px] pt-[18px] pb-7">
-            <h1 className="text-3xl leading-tight font-extrabold">
-              {TODAY.member}
+            <div className={KICKER}>ME</div>
+            <h1 className="mt-2.5 text-3xl leading-tight font-extrabold">
+              {name}
             </h1>
             <p className="mt-1.5 mb-5 text-[13px] font-medium text-ash-700">
               {TODAY.memberMeta}
@@ -476,6 +576,14 @@ function HappyDayApp({ homeLayout = 'poster', navModel = 'tabs' }: Props) {
                   A+
                 </button>
               </div>
+              <button
+                type="button"
+                onClick={signOut}
+                className="mt-1.5 flex w-full items-center gap-2.5 border-2 border-ink px-4 py-3 text-left text-[15px] font-bold tracking-wide hover:bg-surface"
+              >
+                <span className="flex-1">Sign out</span>
+                <span className="text-accent-700">&rarr;</span>
+              </button>
             </div>
           </div>
         )}
