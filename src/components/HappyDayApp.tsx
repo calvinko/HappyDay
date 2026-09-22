@@ -131,7 +131,7 @@ function HappyDayApp({
   const shrink = () => setSize((s) => Math.max(15, s - 2))
 
   return (
-    <div className="relative flex h-svh w-full flex-col overflow-hidden bg-ground pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+    <div className="relative mx-auto flex h-svh w-full max-w-[760px] flex-col overflow-hidden bg-ground pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
       {navModel === 'top' && chrome && (
         <nav className="flex flex-none gap-5 border-b-2 border-ink px-[18px] pt-2.5 pb-2.5">
           {(
