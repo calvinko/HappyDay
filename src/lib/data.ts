@@ -73,3 +73,39 @@ export const TODAY = {
   totalRead: 612,
   baseStreak: 24,
 }
+
+// Members currently in each group, keyed by the group ids in App.tsx's GROUPS.
+export const GROUP_MEMBERS: Record<string, string[]> = {
+  sj_senior: [
+    'Calvin Ko',
+    'Ivy Chan',
+    'Kwok Ching',
+    'May Tsui',
+    'Catherine',
+    'Rick Ng',
+    'Yvonne Ho',
+  ],
+  sf_senior: ['James Leung', 'Linda Chiu', 'Patrick Chiu'],
+  bra_senior: ['HonYuen'],
+}
+
+export type Member = {
+  id: string
+  name: string
+  aliasesName: string[]
+  remark: string
+}
+
+export const MEMBERS: Member[] = [
+  { id: 'calvin-ko', name: 'Calvin Ko', aliasesName: [], remark: '' },
+  { id: 'ivy-chan', name: 'Ivy Chan', aliasesName: [], remark: '' },
+  { id: 'kwok-ching', name: 'Kwok Ching', aliasesName: [], remark: '' },
+  { id: 'may-tsui', name: 'May Tsui', aliasesName: [], remark: '' },
+  { id: 'catherine', name: 'Catherine', aliasesName: [], remark: '' },
+  { id: 'rick-ng', name: 'Rick Ng', aliasesName: [], remark: '' },
+  { id: 'yvonne-ho', name: 'Yvonne Ho', aliasesName: [], remark: '' },
+  { id: 'james-leung', name: 'James Leung', aliasesName: [], remark: '' },
+  { id: 'linda-chiu', name: 'Linda Chiu', aliasesName: [], remark: '' },
+  { id: 'patrick-chiu', name: 'Patrick Chiu', aliasesName: [], remark: '' },
+  { id: 'honyuen', name: 'HonYuen', aliasesName: [], remark: '' },
+]

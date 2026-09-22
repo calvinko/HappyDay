@@ -24,6 +24,8 @@ const DEFAULT_GROUPS: Group[] = [
 const NAME_KEY = 'happyday.name'
 const GROUP_KEY = 'happyday.group'
 
+
+
 function readName(): string {
   try {
     return localStorage.getItem(NAME_KEY) ?? ''
