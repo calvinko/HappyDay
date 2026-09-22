@@ -160,7 +160,7 @@ function HappyDayApp({
           <div className="animate-hd-in">
             <div className="flex items-baseline justify-between border-b-2 border-ink px-[18px] pt-4 pb-3.5">
               <span className="text-[15px] font-black tracking-[0.14em]">
-                HAPPY DAY
+                快樂每一天 HAPPY DAY
               </span>
               <span className="text-xs font-semibold tracking-wide text-ash-700">
                 {TODAY.dateLong}
