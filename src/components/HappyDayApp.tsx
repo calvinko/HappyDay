@@ -23,6 +23,7 @@ const DEFAULT_GROUPS: Group[] = [
 
 const NAME_KEY = 'happyday.name'
 const GROUP_KEY = 'happyday.group'
+const INVITE_CODE = '43236'
 
 
 
@@ -77,7 +78,11 @@ function HappyDayApp({
   const [group, setGroup] = useState(() => readGroup())
   const [draft, setDraft] = useState('')
   const [draftGroup, setDraftGroup] = useState('')
-  const [signInStep, setSignInStep] = useState<'group' | 'name'>('group')
+  const [draftCode, setDraftCode] = useState('')
+  const [codeError, setCodeError] = useState(false)
+  const [signInStep, setSignInStep] = useState<'code' | 'group' | 'name'>(
+    'code',
+  )
 
   useEffect(() => {
     if (!playing) return
@@ -103,6 +108,15 @@ function HappyDayApp({
     setScreen('hymn')
   }
 
+  const submitCode = () => {
+    if (draftCode.trim() !== INVITE_CODE) {
+      setCodeError(true)
+      return
+    }
+    setCodeError(false)
+    setSignInStep('group')
+  }
+
   const chooseGroup = (id: string) => {
     setDraftGroup(id)
     setSignInStep('name')
@@ -117,14 +131,18 @@ function HappyDayApp({
     writeGroup(draftGroup)
     setDraft('')
     setDraftGroup('')
-    setSignInStep('group')
+    setDraftCode('')
+    setCodeError(false)
+    setSignInStep('code')
   }
 
   const signOut = () => {
     setName('')
     writeName('')
     setDraftGroup('')
-    setSignInStep('group')
+    setDraftCode('')
+    setCodeError(false)
+    setSignInStep('code')
   }
 
   const grow = () => setSize((s) => Math.min(26, s + 2))
@@ -476,9 +494,81 @@ function HappyDayApp({
           </div>
         )}
 
+        {screen === 'profile' && !signedIn && signInStep === 'code' && (
+          <form
+            className="animate-hd-in flex min-h-full flex-col px-[18px] pt-[18px] pb-7"
+            onSubmit={(e) => {
+              e.preventDefault()
+              submitCode()
+            }}
+          >
+            <div className={KICKER}>ME</div>
+            <h1 className="mt-2.5 text-[40px] leading-[0.98] font-extrabold tracking-[-0.02em]">
+              Enter invitation code
+            </h1>
+            <p className="mt-3.5 text-base leading-relaxed text-ash-800 [text-wrap:pretty]">
+              Ask your group leader for the invitation code.
+            </p>
+
+            <div className="mt-7 border-t-2 border-ink pt-5">
+              <label
+                htmlFor="hd-code"
+                className="block text-[11px] font-bold tracking-[0.12em] text-ash-700"
+              >
+                INVITATION CODE
+              </label>
+              <input
+                id="hd-code"
+                name="code"
+                type="text"
+                inputMode="numeric"
+                value={draftCode}
+                onChange={(e) => {
+                  setDraftCode(e.target.value)
+                  setCodeError(false)
+                }}
+                autoComplete="off"
+                spellCheck={false}
+                maxLength={10}
+                placeholder="00000"
+                autoFocus
+                className="mt-2.5 w-full border-2 border-ink bg-transparent px-3.5 py-3.5 text-[22px] font-bold tracking-[-0.01em] placeholder:font-medium placeholder:text-ash-400 focus:bg-surface"
+              />
+              {codeError && (
+                <p className="mt-2.5 text-[13px] font-semibold text-accent-700">
+                  Wrong code. Please try again.
+                </p>
+              )}
+              <button
+                type="submit"
+                disabled={draftCode.trim() === ''}
+                className="mt-3.5 flex w-full items-center gap-2.5 border-2 border-accent bg-accent px-4 py-[13px] text-left text-[15px] font-bold tracking-wide text-white hover:border-accent-600 hover:bg-accent-600 active:border-accent-700 active:bg-accent-700 disabled:cursor-not-allowed disabled:border-ash-400 disabled:bg-transparent disabled:text-ash-500"
+              >
+                <span className="flex-1">Continue</span>
+                <span className="text-lg">&rarr;</span>
+              </button>
+            </div>
+
+            <div className="mt-auto border-t-2 border-ink pt-3.5">
+              <span className="text-[13px] leading-snug font-medium text-ash-800">
+                No account and no password. Just the code your group shared.
+              </span>
+            </div>
+          </form>
+        )}
+
         {screen === 'profile' && !signedIn && signInStep === 'group' && (
           <div className="animate-hd-in flex min-h-full flex-col px-[18px] pt-[18px] pb-7">
-            <div className={KICKER}>ME</div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setSignInStep('code')}
+                className="text-xl leading-none"
+              >
+                &larr;
+              </button>
+              <span className={KICKER}>ME</span>
+            </div>
             <h1 className="mt-2.5 text-[40px] leading-[0.98] font-extrabold tracking-[-0.02em]">
               Who&rsquo;s reading?
             </h1>
