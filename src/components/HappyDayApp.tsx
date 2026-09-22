@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { HISTORY, HYMNS, RECENT, TODAY, VERSES } from '../lib/data'
+import { GROUP_MEMBERS, HISTORY, HYMNS, RECENT, TODAY, VERSES } from '../lib/data'
 
 type Screen = 'home' | 'passage' | 'resources' | 'hymn' | 'profile'
 
@@ -80,6 +80,7 @@ function HappyDayApp({
   const [draftGroup, setDraftGroup] = useState('')
   const [draftCode, setDraftCode] = useState('')
   const [codeError, setCodeError] = useState(false)
+  const [showNameSuggestions, setShowNameSuggestions] = useState(false)
   const [signInStep, setSignInStep] = useState<'code' | 'group' | 'name'>(
     'code',
   )
@@ -101,6 +102,10 @@ function HappyDayApp({
 
   const labelForGroup = (id: string) =>
     groups.find((g) => g.id === id)?.label ?? id
+
+  const nameSuggestions = (GROUP_MEMBERS[draftGroup] ?? []).filter((m) =>
+    m.toLowerCase().includes(draft.trim().toLowerCase()),
+  )
 
   const openHymn = (i: number) => {
     setHymnIdx(i)
@@ -133,6 +138,7 @@ function HappyDayApp({
     setDraftGroup('')
     setDraftCode('')
     setCodeError(false)
+    setShowNameSuggestions(false)
     setSignInStep('code')
   }
 
@@ -142,6 +148,7 @@ function HappyDayApp({
     setDraftGroup('')
     setDraftCode('')
     setCodeError(false)
+    setShowNameSuggestions(false)
     setSignInStep('code')
   }
 
@@ -650,20 +657,45 @@ function HappyDayApp({
               >
                 YOUR NAME
               </label>
-              <input
-                id="hd-name"
-                name="name"
-                type="text"
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                autoComplete="name"
-                autoCapitalize="words"
-                spellCheck={false}
-                maxLength={40}
-                placeholder="Grace Lim"
-                autoFocus
-                className="mt-2.5 w-full border-2 border-ink bg-transparent px-3.5 py-3.5 text-[22px] font-bold tracking-[-0.01em] placeholder:font-medium placeholder:text-ash-400 focus:bg-surface"
-              />
+              <div className="relative">
+                <input
+                  id="hd-name"
+                  name="name"
+                  type="text"
+                  value={draft}
+                  onChange={(e) => {
+                    setDraft(e.target.value)
+                    setShowNameSuggestions(true)
+                  }}
+                  onFocus={() => setShowNameSuggestions(true)}
+                  onBlur={() => setShowNameSuggestions(false)}
+                  autoComplete="off"
+                  autoCapitalize="words"
+                  spellCheck={false}
+                  maxLength={40}
+                  placeholder="Grace Lim"
+                  autoFocus
+                  className="mt-2.5 w-full border-2 border-ink bg-transparent px-3.5 py-3.5 text-[22px] font-bold tracking-[-0.01em] placeholder:font-medium placeholder:text-ash-400 focus:bg-surface"
+                />
+                {showNameSuggestions && nameSuggestions.length > 0 && (
+                  <div className="absolute inset-x-0 top-full z-10 -mt-px max-h-[240px] overflow-y-auto border-2 border-ink bg-ground shadow-frame">
+                    {nameSuggestions.map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          setDraft(m)
+                          setShowNameSuggestions(false)
+                        }}
+                        className="block w-full border-b border-ink/40 px-3.5 py-3 text-left text-[17px] font-bold last:border-b-0 hover:bg-surface"
+                      >
+                        {m}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
                 type="submit"
                 disabled={draft.trim() === ''}
