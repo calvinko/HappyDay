@@ -88,7 +88,7 @@ export type GroupContent = {
 export const GROUP_CONTENT: Record<string, GroupContent> = {
   sj_senior: {
     passage: '「弟兄們哪，你們要忍耐，直到主來。看哪，農夫忍耐等候地裏寶貴的出產，直到得了秋雨春雨。 你們也當忍耐，堅固你們的心，因為主來的日子近了。」雅各書 5:7-8 CUNP-神',
-    song: '## 24小時的同在 \n 1. 24小時的同在\n 何等甜蜜寶貴祝福,\n有誰像你這樣親近\n唯你是我隨時的幫助。',
+    song: '## 24小時的同在 \n 1. 24小時的同在 何等甜蜜寶貴祝福, 有誰像你這樣親近\n唯你是我隨時的幫助。',
     songUrl: 'https://kosolution.net/songaudio/S1-153-%e4%ba%8c%e5%8d%81%e5%9b%9b%e5%b0%8f%e6%99%82%e7%9a%84%e5%90%8c%e5%9c%a8.mp3',
     supplementary: null,
   },
