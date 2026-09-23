@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   GROUP_CONTENT,
   GROUP_MEMBERS,
@@ -9,7 +9,7 @@ import {
   type Hymn,
 } from '../lib/data'
 
-type Screen = 'home' | 'passage' | 'resources' | 'hymn' | 'profile'
+type Screen = 'home' | 'passage' | 'resources' | 'profile'
 
 export type Group = { id: string; label: string }
 
@@ -75,12 +75,8 @@ function HappyDayApp({
   groups = DEFAULT_GROUPS,
 }: Props) {
   const [screen, setScreen] = useState<Screen>('home')
-  const [hymnIdx, setHymnIdx] = useState(0)
-  const [from, setFrom] = useState<Screen>('home')
   const [read, setRead] = useState(false)
   const [size, setSize] = useState(15)
-  const [playing, setPlaying] = useState(false)
-  const [pct, setPct] = useState(12)
   const [reminder, setReminder] = useState(true)
   const [name, setName] = useState(() => readName())
   const [group, setGroup] = useState(() => readGroup())
@@ -93,31 +89,21 @@ function HappyDayApp({
     'code',
   )
 
-  useEffect(() => {
-    if (!playing) return
-    const t = setInterval(() => setPct((p) => (p >= 98 ? 0 : p + 1.2)), 400)
-    return () => clearInterval(t)
-  }, [playing])
-
   const groupContent = GROUP_CONTENT[group]
   // Falls back to the static HYMNS/TODAY data when signed out or the group
   // has no placeholder content yet (see GROUP_CONTENT in lib/data.ts).
   const hymns: Hymn[] = groupContent
     ? [{ no: '—', title: groupContent.song, meta: '', verses: [groupContent.song] }]
     : HYMNS
-  const hymn = hymns[hymnIdx] ?? hymns[0]
   const content = groupContent ?? {
     passage: TODAY.passageRef,
-    song: hymn.title,
+    song: hymns[0].title,
     supplementary: null,
   }
   const streak = TODAY.baseStreak + (read ? 1 : 0)
   const signedIn = name !== ''
   const firstName = name.split(' ')[0]
-  const chrome = screen !== 'passage' && screen !== 'hymn'
-  const mm = Math.floor((pct * 2.4) / 60)
-  const ss = Math.floor((pct * 2.4) % 60)
-  const clock = `${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`
+  const chrome = screen !== 'passage'
 
   const labelForGroup = (id: string) =>
     groups.find((g) => g.id === id)?.label ?? id
@@ -125,12 +111,6 @@ function HappyDayApp({
   const nameSuggestions = (GROUP_MEMBERS[draftGroup] ?? []).filter((m) =>
     m.toLowerCase().includes(draft.trim().toLowerCase()),
   )
-
-  const openHymn = (i: number) => {
-    setHymnIdx(i)
-    setFrom(screen)
-    setScreen('hymn')
-  }
 
   const submitCode = () => {
     if (draftCode.trim() !== INVITE_CODE) {
@@ -230,26 +210,28 @@ function HappyDayApp({
 
             <section className="px-[18px] pt-5 pb-2">
               <div className={`${KICKER} mb-3.5`}>TODAY&rsquo;S HYMNS</div>
-              {hymns.map((h, i) => (
-                <button
-                  key={h.no}
-                  type="button"
-                  onClick={() => openHymn(i)}
-                  className="flex w-full items-center gap-3.5 border-t border-ink/40 py-3.5 text-left hover:bg-surface"
-                >
-                  <span className="min-w-[54px] text-[26px] font-extrabold text-ash-400">
-                    {h.no}
-                  </span>
-                  <span className="flex flex-1 flex-col gap-[3px]">
-                    <span className="text-[17px] font-bold">{h.title}</span>
-                    <span className="text-xs font-medium tracking-wide text-ash-700">
-                      {h.meta}
+              {hymns.map((h) => (
+                <div key={h.no} className="border-t border-ink/40 py-3.5">
+                  <div className="flex items-center gap-3.5">
+                    <span className="min-w-[54px] text-[26px] font-extrabold text-ash-400">
+                      {h.no}
                     </span>
-                  </span>
-                  <span className="flex h-[34px] w-[34px] items-center justify-center border-2 border-ink text-[11px]">
-                    &#9654;
-                  </span>
-                </button>
+                    <span className="flex flex-1 flex-col gap-[3px]">
+                      <span className="text-[17px] font-bold">{h.title}</span>
+                      <span className="text-xs font-medium tracking-wide text-ash-700">
+                        {h.meta}
+                      </span>
+                    </span>
+                  </div>
+                  {h.verses.map((v, i) => (
+                    <p
+                      key={i}
+                      className="mt-3 whitespace-pre-line leading-[1.65] [text-wrap:pretty]"
+                    >
+                      {v}
+                    </p>
+                  ))}
+                </div>
               ))}
             </section>
 
@@ -312,24 +294,31 @@ function HappyDayApp({
               </button>
             </section>
 
-            {hymns.map((h, i) => (
-              <button
+            {hymns.map((h) => (
+              <div
                 key={h.no}
-                type="button"
-                onClick={() => openHymn(i)}
-                className="mb-3 flex w-full items-center gap-3.5 border-2 border-ink bg-surface p-3.5 text-left hover:bg-accent-200"
+                className="mb-3 border-2 border-ink bg-surface p-3.5"
               >
-                <span className="min-w-[48px] text-[22px] font-extrabold text-accent">
-                  {h.no}
-                </span>
-                <span className="flex flex-1 flex-col gap-[3px]">
-                  <span className="text-[11px] font-bold tracking-[0.12em] text-ash-700">
-                    HYMN
+                <div className="flex items-center gap-3.5">
+                  <span className="min-w-[48px] text-[22px] font-extrabold text-accent">
+                    {h.no}
                   </span>
-                  <span className="text-base font-bold">{h.title}</span>
-                </span>
-                <span className="text-[13px]">&#9654;</span>
-              </button>
+                  <span className="flex flex-1 flex-col gap-[3px]">
+                    <span className="text-[11px] font-bold tracking-[0.12em] text-ash-700">
+                      HYMN
+                    </span>
+                    <span className="text-base font-bold">{h.title}</span>
+                  </span>
+                </div>
+                {h.verses.map((v, i) => (
+                  <p
+                    key={i}
+                    className="mt-3 whitespace-pre-line leading-[1.65] [text-wrap:pretty]"
+                  >
+                    {v}
+                  </p>
+                ))}
+              </div>
             ))}
 
             <div className="flex items-center justify-between gap-2 border-2 border-ink px-4 py-3.5">
@@ -419,7 +408,7 @@ function HappyDayApp({
               </button>
               <button
                 type="button"
-                onClick={() => openHymn(0)}
+                onClick={() => setScreen('resources')}
                 className="mt-5 flex w-full items-center gap-2.5 border-t border-ink/40 pt-3.5 text-left text-sm font-bold"
               >
                 <span className="flex-1">
@@ -439,24 +428,28 @@ function HappyDayApp({
             <p className="mb-5 text-[13px] font-medium text-ash-700">
               Hymns designated for {TODAY.dateLong}
             </p>
-            {hymns.map((h, i) => (
-              <button
-                key={h.no}
-                type="button"
-                onClick={() => openHymn(i)}
-                className="flex w-full items-center gap-3.5 border-t-2 border-ink py-4 text-left hover:bg-surface"
-              >
-                <span className="min-w-[58px] text-3xl font-extrabold text-accent">
-                  {h.no}
-                </span>
-                <span className="flex flex-1 flex-col gap-[3px]">
-                  <span className="text-lg font-bold">{h.title}</span>
-                  <span className="text-xs font-medium text-ash-700">
-                    {h.meta}
+            {hymns.map((h) => (
+              <div key={h.no} className="border-t-2 border-ink py-4">
+                <div className="flex items-center gap-3.5">
+                  <span className="min-w-[58px] text-3xl font-extrabold text-accent">
+                    {h.no}
                   </span>
-                </span>
-                <span className="text-[13px]">&#9654;</span>
-              </button>
+                  <span className="flex flex-1 flex-col gap-[3px]">
+                    <span className="text-lg font-bold">{h.title}</span>
+                    <span className="text-xs font-medium text-ash-700">
+                      {h.meta}
+                    </span>
+                  </span>
+                </div>
+                {h.verses.map((v, i) => (
+                  <p
+                    key={i}
+                    className="mt-3 whitespace-pre-line leading-[1.65] [text-wrap:pretty]"
+                  >
+                    {v}
+                  </p>
+                ))}
+              </div>
             ))}
             <div className={`${KICKER} mt-7 mb-1.5`}>SUNG THIS WEEK</div>
             {RECENT.map((r) => (
@@ -473,47 +466,6 @@ function HappyDayApp({
                 <span className="text-xs text-ash-600">{r.day}</span>
               </div>
             ))}
-          </div>
-        )}
-
-        {screen === 'hymn' && (
-          <div className="animate-hd-in">
-            <header className="sticky top-0 z-10 flex items-center gap-3 border-b-2 border-ink bg-ground px-[18px] py-3">
-              <button
-                type="button"
-                onClick={() => setScreen(from === 'hymn' ? 'home' : from)}
-                className="text-xl leading-none"
-              >
-                &larr;
-              </button>
-              <span className="flex-1 text-[15px] font-bold">
-                Hymn {hymn.no}
-              </span>
-            </header>
-            <div className="px-[18px] pt-5">
-              <div className="text-[64px] leading-[0.9] font-extrabold tracking-[-0.03em] text-accent">
-                {hymn.no}
-              </div>
-              <h1 className="mt-2.5 mb-1 text-[26px] leading-tight font-extrabold">
-                {hymn.title}
-              </h1>
-              <p className="border-b-2 border-ink pb-4 text-xs font-semibold tracking-wide text-ash-700">
-                {hymn.meta}
-              </p>
-            </div>
-            <div className="px-[18px] pt-[18px] pb-[120px]">
-              {hymn.verses.map((t, i) => (
-                <div key={i} className="mb-[22px]">
-                  <div className={`${KICKER} mb-2`}>VERSE {i + 1}</div>
-                  <p
-                    className="leading-[1.65] whitespace-pre-line [text-wrap:pretty]"
-                    style={{ fontSize: size }}
-                  >
-                    {t}
-                  </p>
-                </div>
-              ))}
-            </div>
           </div>
         )}
 
@@ -799,35 +751,6 @@ function HappyDayApp({
           </div>
         )}
       </div>
-
-      {screen === 'hymn' && (
-        <div className="flex-none border-t-2 border-ink bg-surface px-[18px] py-3">
-          <div className="flex items-center gap-3.5">
-            <button
-              type="button"
-              onClick={() => setPlaying((p) => !p)}
-              className="flex h-11 w-11 items-center justify-center bg-accent text-[15px] text-white hover:bg-accent-600"
-            >
-              {playing ? '‖' : '▶'}
-            </button>
-            <span className="flex flex-1 flex-col gap-1.5">
-              <span className="text-xs font-semibold tracking-wide text-ash-800">
-                {playing ? 'Playing · ' : 'Recording · '}
-                {hymn.title}
-              </span>
-              <span className="block h-1 bg-ash-300">
-                <span
-                  className="block h-1 bg-accent transition-[width] duration-300 ease-linear"
-                  style={{ width: `${pct.toFixed(0)}%` }}
-                />
-              </span>
-            </span>
-            <span className="text-xs font-semibold text-ash-700">
-              {clock}
-            </span>
-          </div>
-        </div>
-      )}
 
       {navModel === 'tabs' && chrome && (
         <nav className="grid flex-none grid-cols-3 border-t-2 border-ink bg-ground">
