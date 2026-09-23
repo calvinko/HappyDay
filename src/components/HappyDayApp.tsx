@@ -204,7 +204,7 @@ function HappyDayApp({
         {screen === 'home' && homeLayout === 'poster' && (
           <div className="animate-hd-in">
             <div className="flex items-baseline justify-between border-b-2 border-ink px-[18px] pt-4 pb-3.5">
-              <span className="text-[19px] font-black tracking-[0.14em]">
+              <span className="text-[22px] font-black tracking-[0.14em]">
                 快樂每一天 HAPPY DAY
               </span>
               <span className="text-xs font-semibold tracking-wide text-ash-700">
@@ -214,11 +214,8 @@ function HappyDayApp({
 
             <section className="border-b-2 border-ink px-[18px] pt-[22px] pb-5">
               <div className={`${KICKER} mb-2.5`}>TODAY&rsquo;S PASSAGE</div>
-              <h1 className="mb-3 text-[40px] leading-[0.98] font-extrabold tracking-[-0.02em]">
-                {content.passage}
-              </h1>
               <p className="mb-[18px] text-base leading-relaxed text-ash-800 [text-wrap:pretty]">
-                &ldquo;{VERSES[0]}&rdquo;
+                {content.passage}
               </p>
               <button
                 type="button"

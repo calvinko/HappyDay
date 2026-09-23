@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash  VARCHAR(255) NOT NULL,
   display_name   VARCHAR(100) NOT NULL,
   group_id       VARCHAR(50)  NOT NULL DEFAULT 'sj_senior',
+  user_role      ENUM('user', 'groupadmin', 'appadmin') NOT NULL DEFAULT 'user',
   created_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   last_login_at  TIMESTAMP    NULL,
   UNIQUE KEY uq_users_username (username)
