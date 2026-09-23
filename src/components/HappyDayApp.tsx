@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import {
   GROUP_CONTENT,
   GROUP_MEMBERS,
-  HISTORY,
   HYMNS,
   RECENT,
   TODAY,
@@ -223,7 +222,7 @@ function HappyDayApp({
                 className="flex w-full items-center gap-2.5 bg-accent px-4 py-[15px] text-left text-[15px] font-bold tracking-wide text-white hover:bg-accent-600 active:bg-accent-700"
               >
                 <span className="flex-1">
-                  {read ? 'Read again' : 'Read today’s passage'}
+                  {read ? 'Read again' : 'Read the whole chapter'}
                 </span>
                 <span className="text-lg">&rarr;</span>
               </button>
@@ -307,7 +306,7 @@ function HappyDayApp({
                 className="flex w-full items-center gap-2.5 bg-accent px-3.5 py-3 text-left text-sm font-bold tracking-wide text-white hover:bg-accent-600"
               >
                 <span className="flex-1">
-                  {read ? 'Read again' : 'Read today’s passage'}
+                  {read ? 'Read again' : 'Read the whole chapter'}
                 </span>
                 <span>&rarr;</span>
               </button>
@@ -745,45 +744,6 @@ function HappyDayApp({
               {TODAY.memberMeta}
               {group && ` · ${labelForGroup(group)}`}
             </p>
-            <div className="mb-6 grid grid-cols-2 border-2 border-ink">
-              <div className="border-r-2 border-ink p-4">
-                <div className="text-[34px] font-extrabold text-accent">
-                  {streak}
-                </div>
-                <div className="text-[11px] font-bold tracking-[0.12em] text-ash-700">
-                  DAY STREAK
-                </div>
-              </div>
-              <div className="p-4">
-                <div className="text-[34px] font-extrabold">
-                  {TODAY.totalRead}
-                </div>
-                <div className="text-[11px] font-bold tracking-[0.12em] text-ash-700">
-                  PASSAGES READ
-                </div>
-              </div>
-            </div>
-            <div className={`${KICKER} mb-1`}>LAST SEVEN DAYS</div>
-            {HISTORY.map((h) => (
-              <div
-                key={h.ref}
-                className="flex items-center gap-3 border-t border-ink/40 py-[13px]"
-              >
-                <span
-                  className={`flex h-[22px] w-[22px] items-center justify-center border-2 border-ink text-xs font-bold text-white ${
-                    h.done ? 'bg-accent' : 'bg-ground'
-                  }`}
-                >
-                  {h.done ? '✓' : ''}
-                </span>
-                <span className="flex-1 text-[15px] font-semibold">
-                  {h.ref}
-                </span>
-                <span className="text-xs font-medium text-ash-700">
-                  {h.day}
-                </span>
-              </div>
-            ))}
             <div className="mt-[26px] flex flex-col gap-3.5 border-t-2 border-ink pt-4">
               <button
                 type="button"
