@@ -1,6 +1,7 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkBreaks from 'remark-breaks'
+import { fetchGroupContent, type DailyContent } from '../lib/api'
 import {
   GROUP_CONTENT,
   GROUP_MEMBERS,
@@ -106,9 +107,40 @@ function HappyDayApp({
     'code',
   )
 
-  const groupContent = GROUP_CONTENT[group]
-  // Falls back to the static HYMNS/TODAY data when signed out or the group
-  // has no placeholder content yet (see GROUP_CONTENT in lib/data.ts).
+  const [remoteContent, setRemoteContent] = useState<{
+    group: string
+    data: DailyContent | null
+  } | null>(null)
+
+  useEffect(() => {
+    if (!group) return
+    let cancelled = false
+    fetchGroupContent(group)
+      .then((data) => {
+        if (!cancelled) setRemoteContent({ group, data })
+      })
+      .catch(() => {
+        if (!cancelled) setRemoteContent({ group, data: null })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [group])
+
+  const fetchedContent =
+    remoteContent?.group === group ? remoteContent.data : null
+
+  // Prefers the server's content for today; falls back to the static
+  // GROUP_CONTENT placeholder on a fetch error or when nothing's assigned yet,
+  // and further to the static HYMNS/TODAY data when the group has neither.
+  const groupContent = fetchedContent
+    ? {
+        passage: fetchedContent.passage,
+        song: fetchedContent.song ?? '',
+        songUrl: fetchedContent.songUrl,
+        supplementary: fetchedContent.supplementary,
+      }
+    : GROUP_CONTENT[group]
   const hymns: Hymn[] = groupContent
     ? [
         {
