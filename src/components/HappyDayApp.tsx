@@ -7,6 +7,7 @@ import {
   RECENT,
   TODAY,
   VERSES,
+  type Hymn,
 } from '../lib/data'
 
 type Screen = 'home' | 'passage' | 'resources' | 'hymn' | 'profile'
@@ -78,7 +79,7 @@ function HappyDayApp({
   const [hymnIdx, setHymnIdx] = useState(0)
   const [from, setFrom] = useState<Screen>('home')
   const [read, setRead] = useState(false)
-  const [size, setSize] = useState(19)
+  const [size, setSize] = useState(15)
   const [playing, setPlaying] = useState(false)
   const [pct, setPct] = useState(12)
   const [reminder, setReminder] = useState(true)
@@ -99,10 +100,14 @@ function HappyDayApp({
     return () => clearInterval(t)
   }, [playing])
 
-  const hymn = HYMNS[hymnIdx]
-  // Falls back to the static TODAY passage when signed out or the group has
-  // no placeholder content yet (see GROUP_CONTENT in lib/data.ts).
-  const content = GROUP_CONTENT[group] ?? {
+  const groupContent = GROUP_CONTENT[group]
+  // Falls back to the static HYMNS/TODAY data when signed out or the group
+  // has no placeholder content yet (see GROUP_CONTENT in lib/data.ts).
+  const hymns: Hymn[] = groupContent
+    ? [{ no: '—', title: groupContent.song, meta: '', verses: [groupContent.song] }]
+    : HYMNS
+  const hymn = hymns[hymnIdx] ?? hymns[0]
+  const content = groupContent ?? {
     passage: TODAY.passageRef,
     song: hymn.title,
     supplementary: null,
@@ -199,7 +204,7 @@ function HappyDayApp({
         {screen === 'home' && homeLayout === 'poster' && (
           <div className="animate-hd-in">
             <div className="flex items-baseline justify-between border-b-2 border-ink px-[18px] pt-4 pb-3.5">
-              <span className="text-[15px] font-black tracking-[0.14em]">
+              <span className="text-[19px] font-black tracking-[0.14em]">
                 快樂每一天 HAPPY DAY
               </span>
               <span className="text-xs font-semibold tracking-wide text-ash-700">
@@ -229,7 +234,7 @@ function HappyDayApp({
 
             <section className="px-[18px] pt-5 pb-2">
               <div className={`${KICKER} mb-3.5`}>TODAY&rsquo;S HYMNS</div>
-              {HYMNS.map((h, i) => (
+              {hymns.map((h, i) => (
                 <button
                   key={h.no}
                   type="button"
@@ -272,7 +277,7 @@ function HappyDayApp({
         {screen === 'home' && homeLayout === 'cards' && (
           <div className="animate-hd-in px-4 pt-4 pb-6">
             <div className="mb-1.5 flex items-baseline justify-between">
-              <span className="text-[15px] font-black tracking-[0.14em]">
+              <span className="text-[19px] font-black tracking-[0.14em]">
                 HAPPY DAY
               </span>
               <span className="text-xs font-semibold text-ash-700">
@@ -311,7 +316,7 @@ function HappyDayApp({
               </button>
             </section>
 
-            {HYMNS.map((h, i) => (
+            {hymns.map((h, i) => (
               <button
                 key={h.no}
                 type="button"
@@ -422,7 +427,7 @@ function HappyDayApp({
                 className="mt-5 flex w-full items-center gap-2.5 border-t border-ink/40 pt-3.5 text-left text-sm font-bold"
               >
                 <span className="flex-1">
-                  Next: hymn {HYMNS[0].no}, {HYMNS[0].title}
+                  Next: hymn {hymns[0].no}, {hymns[0].title}
                 </span>
                 <span className="text-accent-700">&rarr;</span>
               </button>
@@ -438,7 +443,7 @@ function HappyDayApp({
             <p className="mb-5 text-[13px] font-medium text-ash-700">
               Hymns designated for {TODAY.dateLong}
             </p>
-            {HYMNS.map((h, i) => (
+            {hymns.map((h, i) => (
               <button
                 key={h.no}
                 type="button"
