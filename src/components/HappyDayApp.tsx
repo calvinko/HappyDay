@@ -249,12 +249,12 @@ function HappyDayApp({
                     </span>
                   </div>
                   {h.verses.map((v, i) => (
-                    <p
+                    <span
                       key={i}
-                      className="mt-3 whitespace-pre-line leading-[1.65] [text-wrap:pretty]"
+                      className="mt-3 leading-[1.65] [text-wrap:pretty]"
                     >
                       <Markdown>{v}</Markdown>
-                    </p>
+                    </span>
                   ))}
                   {h.songUrl && (
                     <audio controls className="mt-3 w-full" src={h.songUrl} />
