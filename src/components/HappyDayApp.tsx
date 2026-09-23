@@ -93,7 +93,7 @@ function HappyDayApp({
   // Falls back to the static HYMNS/TODAY data when signed out or the group
   // has no placeholder content yet (see GROUP_CONTENT in lib/data.ts).
   const hymns: Hymn[] = groupContent
-    ? [{ no: '—', title: groupContent.song, meta: '', verses: [groupContent.song] }]
+    ? [{ no: '—', title: '', meta: '', verses: [groupContent.song] }]
     : HYMNS
   const content = groupContent ?? {
     passage: TODAY.passageRef,
