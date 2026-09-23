@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react'
-import { GROUP_MEMBERS, HISTORY, HYMNS, RECENT, TODAY, VERSES } from '../lib/data'
+import {
+  GROUP_CONTENT,
+  GROUP_MEMBERS,
+  HISTORY,
+  HYMNS,
+  RECENT,
+  TODAY,
+  VERSES,
+} from '../lib/data'
 
 type Screen = 'home' | 'passage' | 'resources' | 'hymn' | 'profile'
 
@@ -92,6 +100,13 @@ function HappyDayApp({
   }, [playing])
 
   const hymn = HYMNS[hymnIdx]
+  // Falls back to the static TODAY passage when signed out or the group has
+  // no placeholder content yet (see GROUP_CONTENT in lib/data.ts).
+  const content = GROUP_CONTENT[group] ?? {
+    passage: TODAY.passageRef,
+    song: hymn.title,
+    supplementary: null,
+  }
   const streak = TODAY.baseStreak + (read ? 1 : 0)
   const signedIn = name !== ''
   const firstName = name.split(' ')[0]
@@ -195,7 +210,7 @@ function HappyDayApp({
             <section className="border-b-2 border-ink px-[18px] pt-[22px] pb-5">
               <div className={`${KICKER} mb-2.5`}>TODAY&rsquo;S PASSAGE</div>
               <h1 className="mb-3 text-[40px] leading-[0.98] font-extrabold tracking-[-0.02em]">
-                {TODAY.passageRef}
+                {content.passage}
               </h1>
               <p className="mb-[18px] text-base leading-relaxed text-ash-800 [text-wrap:pretty]">
                 &ldquo;{VERSES[0]}&rdquo;
@@ -279,7 +294,7 @@ function HappyDayApp({
             <section className="mb-3.5 border-2 border-ink bg-surface p-4">
               <div className={`${KICKER} mb-2`}>PASSAGE</div>
               <h2 className="mb-2 text-[26px] leading-tight font-extrabold">
-                {TODAY.passageRef}
+                {content.passage}
               </h2>
               <p className="mb-4 text-[13px] font-medium text-ash-700">
                 14 verses · about 3 minutes
@@ -348,7 +363,7 @@ function HappyDayApp({
                 &larr;
               </button>
               <span className="flex-1 text-[15px] font-bold">
-                {TODAY.passageRef}
+                {content.passage}
               </span>
               <button
                 type="button"

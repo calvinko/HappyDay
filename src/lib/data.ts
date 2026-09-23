@@ -74,6 +74,28 @@ export const TODAY = {
   baseStreak: 24,
 }
 
+export type GroupContent = {
+  passage: string
+  song: string
+  supplementary: string | null
+}
+
+// Placeholder for testing, standing in for the daily_content row the server will
+// eventually serve per group (see server/sql/schema.sql). Keyed by the group ids
+// in App.tsx's GROUPS. Replace with a fetch from the server API once it's wired up.
+export const GROUP_CONTENT: Record<string, GroupContent> = {
+  sj_senior: {
+    passage: '「弟兄們哪，你們要忍耐，直到主來。看哪，農夫忍耐等候地裏寶貴的出產，直到得了秋雨春雨。 你們也當忍耐，堅固你們的心，因為主來的日子近了。」雅各書 5:7-8 CUNP-神',
+    song: '1. 24小時的同在\n 何等甜蜜寶貴祝福,\n有誰像你這樣親近\n唯你是我隨時的幫助。',
+    supplementary: null,
+  },
+  bra_senior: {
+    passage: 'João 3:16-21',
+    song: 'Grandioso És Tu',
+    supplementary: null,
+  },
+}
+
 // Members currently in each group, keyed by the group ids in App.tsx's GROUPS.
 export const GROUP_MEMBERS: Record<string, string[]> = {
   sj_senior: [
