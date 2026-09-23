@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkBreaks from 'remark-breaks'
 import {
   GROUP_CONTENT,
   GROUP_MEMBERS,
@@ -8,6 +10,21 @@ import {
   VERSES,
   type Hymn,
 } from '../lib/data'
+
+// Passage and song content support markdown (bold/italic/links, single
+// newlines as line breaks). Paragraphs render as fragments so this can be
+// dropped into any inline or block container without invalid nesting.
+const MARKDOWN_COMPONENTS = {
+  p: ({ children }: { children?: ReactNode }) => <>{children}</>,
+}
+
+function Markdown({ children }: { children: string }) {
+  return (
+    <ReactMarkdown remarkPlugins={[remarkBreaks]} components={MARKDOWN_COMPONENTS}>
+      {children}
+    </ReactMarkdown>
+  )
+}
 
 type Screen = 'home' | 'passage' | 'resources' | 'profile'
 
@@ -93,7 +110,15 @@ function HappyDayApp({
   // Falls back to the static HYMNS/TODAY data when signed out or the group
   // has no placeholder content yet (see GROUP_CONTENT in lib/data.ts).
   const hymns: Hymn[] = groupContent
-    ? [{ no: '—', title: '', meta: '', verses: [groupContent.song] }]
+    ? [
+        {
+          no: '—',
+          title: '',
+          meta: '',
+          verses: [groupContent.song],
+          songUrl: groupContent.songUrl,
+        },
+      ]
     : HYMNS
   const content = groupContent ?? {
     passage: TODAY.passageRef,
@@ -194,7 +219,7 @@ function HappyDayApp({
             <section className="border-b-2 border-ink px-[18px] pt-[22px] pb-5">
               <div className={`${KICKER} mb-2.5`}>TODAY&rsquo;S PASSAGE</div>
               <p className="mb-[18px] text-base leading-relaxed text-ash-800 [text-wrap:pretty]">
-                {content.passage}
+                <Markdown>{content.passage}</Markdown>
               </p>
               <button
                 type="button"
@@ -228,9 +253,12 @@ function HappyDayApp({
                       key={i}
                       className="mt-3 whitespace-pre-line leading-[1.65] [text-wrap:pretty]"
                     >
-                      {v}
+                      <Markdown>{v}</Markdown>
                     </p>
                   ))}
+                  {h.songUrl && (
+                    <audio controls className="mt-3 w-full" src={h.songUrl} />
+                  )}
                 </div>
               ))}
             </section>
@@ -277,7 +305,7 @@ function HappyDayApp({
             <section className="mb-3.5 border-2 border-ink bg-surface p-4">
               <div className={`${KICKER} mb-2`}>PASSAGE</div>
               <h2 className="mb-2 text-[26px] leading-tight font-extrabold">
-                {content.passage}
+                <Markdown>{content.passage}</Markdown>
               </h2>
               <p className="mb-4 text-[13px] font-medium text-ash-700">
                 14 verses · about 3 minutes
@@ -315,9 +343,12 @@ function HappyDayApp({
                     key={i}
                     className="mt-3 whitespace-pre-line leading-[1.65] [text-wrap:pretty]"
                   >
-                    {v}
+                    <Markdown>{v}</Markdown>
                   </p>
                 ))}
+                {h.songUrl && (
+                  <audio controls className="mt-3 w-full" src={h.songUrl} />
+                )}
               </div>
             ))}
 
@@ -353,7 +384,7 @@ function HappyDayApp({
                 &larr;
               </button>
               <span className="flex-1 text-[15px] font-bold">
-                {content.passage}
+                <Markdown>{content.passage}</Markdown>
               </span>
               <button
                 type="button"
@@ -446,9 +477,12 @@ function HappyDayApp({
                     key={i}
                     className="mt-3 whitespace-pre-line leading-[1.65] [text-wrap:pretty]"
                   >
-                    {v}
+                    <Markdown>{v}</Markdown>
                   </p>
                 ))}
+                {h.songUrl && (
+                  <audio controls className="mt-3 w-full" src={h.songUrl} />
+                )}
               </div>
             ))}
             <div className={`${KICKER} mt-7 mb-1.5`}>SUNG THIS WEEK</div>

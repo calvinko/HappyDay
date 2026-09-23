@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS daily_content (
   content_date   DATE         NOT NULL,
   passage        TEXT         NOT NULL,
   song           TEXT         NULL,
+  song_url       VARCHAR(500) NULL,
   supplementary  TEXT         NULL,
   created_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
