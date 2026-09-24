@@ -10,7 +10,6 @@ import {
   GROUP_CONTENT,
   GROUP_MEMBERS,
   HYMNS,
-  RECENT,
   TODAY,
   VERSES,
   type Hymn,
@@ -524,21 +523,6 @@ function HappyDayApp({
                 {h.songUrl && (
                   <audio controls className="mt-3 w-full" src={h.songUrl} />
                 )}
-              </div>
-            ))}
-            <div className={`${KICKER} mt-7 mb-1.5`}>SUNG THIS WEEK</div>
-            {RECENT.map((r) => (
-              <div
-                key={r.no}
-                className="flex items-baseline gap-3.5 border-t border-ink/40 py-3"
-              >
-                <span className="min-w-[58px] text-sm font-bold text-ash-600">
-                  {r.no}
-                </span>
-                <span className="flex-1 text-[15px] font-medium">
-                  {r.title}
-                </span>
-                <span className="text-xs text-ash-600">{r.day}</span>
               </div>
             ))}
           </div>

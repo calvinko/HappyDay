@@ -46,13 +46,6 @@ export const HYMNS: Hymn[] = [
   },
 ]
 
-export const RECENT = [
-  { no: '045', title: 'How Great Thou Art', day: 'Wed' },
-  { no: '112', title: 'Rock of Ages', day: 'Tue' },
-  { no: '008', title: 'Praise to the Lord', day: 'Mon' },
-  { no: '260', title: 'Abide with Me', day: 'Sun' },
-]
-
 export const HISTORY = [
   { ref: 'Psalm 102:1–17', day: 'Yesterday', done: true },
   { ref: 'Psalm 101', day: 'Mon', done: true },
