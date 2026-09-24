@@ -1,5 +1,9 @@
 import { Router } from 'express'
-import { findContentForGroup, findContentForUser } from '../models/dailyContent.js'
+import {
+  findContentForGroup,
+  findContentForUser,
+  findContentForUserByName,
+} from '../models/dailyContent.js'
 
 export const contentRouter = Router()
 
@@ -15,6 +19,16 @@ contentRouter.get('/group/:groupId', async (req, res) => {
   const content = await findContentForGroup(req.params.groupId, dateParam(req))
   if (!content) {
     res.status(404).json({ error: 'no content for this group and date' })
+    return
+  }
+  res.json(content)
+})
+
+// Registered before /user/:userId so "by-name" isn't swallowed as a userId.
+contentRouter.get('/user/by-name/:name', async (req, res) => {
+  const content = await findContentForUserByName(req.params.name, dateParam(req))
+  if (!content) {
+    res.status(404).json({ error: 'no content for this user and date' })
     return
   }
   res.json(content)

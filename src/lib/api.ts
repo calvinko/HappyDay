@@ -9,7 +9,7 @@ export type DailyContent = {
   supplementary: string | null
 }
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:4000'
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'https://kosolution.net/happyday/'
 
 async function getContent(url: string): Promise<DailyContent | null> {
   const res = await fetch(url)
@@ -38,4 +38,17 @@ export function fetchUserContent(
 ): Promise<DailyContent | null> {
   const query = date ? `?date=${encodeURIComponent(date)}` : ''
   return getContent(`${API_BASE}/api/content/user/${userId}${query}`)
+}
+
+// GET /api/content/user/by-name/:name — see server/src/routes/content.ts.
+// The client only has a freely-typed display name (no real account/id), so
+// user-specific content is looked up by name instead of a numeric user id.
+export function fetchUserContentByName(
+  name: string,
+  date?: string,
+): Promise<DailyContent | null> {
+  const query = date ? `?date=${encodeURIComponent(date)}` : ''
+  return getContent(
+    `${API_BASE}/api/content/user/by-name/${encodeURIComponent(name)}${query}`,
+  )
 }

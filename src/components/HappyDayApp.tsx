@@ -1,7 +1,11 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkBreaks from 'remark-breaks'
-import { fetchGroupContent, type DailyContent } from '../lib/api'
+import {
+  fetchGroupContent,
+  fetchUserContentByName,
+  type DailyContent,
+} from '../lib/api'
 import {
   GROUP_CONTENT,
   GROUP_MEMBERS,
@@ -108,6 +112,7 @@ function HappyDayApp({
   )
 
   const [remoteContent, setRemoteContent] = useState<{
+    name: string
     group: string
     data: DailyContent | null
   } | null>(null)
@@ -115,20 +120,23 @@ function HappyDayApp({
   useEffect(() => {
     if (!group) return
     let cancelled = false
-    fetchGroupContent(group)
+    // Checks for content assigned to this person first, then falls back to
+    // their group's content (see fetchUserContentByName/fetchGroupContent).
+    fetchUserContentByName(name)
+      .catch(() => null)
+      .then((data) => data ?? fetchGroupContent(group).catch(() => null))
       .then((data) => {
-        if (!cancelled) setRemoteContent({ group, data })
-      })
-      .catch(() => {
-        if (!cancelled) setRemoteContent({ group, data: null })
+        if (!cancelled) setRemoteContent({ name, group, data })
       })
     return () => {
       cancelled = true
     }
-  }, [group])
+  }, [name, group])
 
   const fetchedContent =
-    remoteContent?.group === group ? remoteContent.data : null
+    remoteContent?.name === name && remoteContent?.group === group
+      ? remoteContent.data
+      : null
 
   // Prefers the server's content for today; falls back to the static
   // GROUP_CONTENT placeholder on a fetch error or when nothing's assigned yet,

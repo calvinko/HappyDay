@@ -60,3 +60,23 @@ export async function findContentForUser(
   )
   return rows[0] ? toDailyContent(rows[0]) : null
 }
+
+// The client only has a freely-typed display name (see HappyDayApp.tsx's
+// sign-in flow), not a registered users.id, so it looks a user's content up
+// by name instead.
+export async function findContentForUserByName(
+  displayName: string,
+  date: string,
+): Promise<DailyContent | null> {
+  const columns = SELECT_COLUMNS.split(', ')
+    .map((c) => `dc.${c}`)
+    .join(', ')
+  const [rows] = await pool.query<DailyContentRow[]>(
+    `SELECT ${columns} FROM daily_content dc
+     JOIN users u ON u.id = dc.user_id
+     WHERE u.display_name = ? AND dc.content_date = ?
+     LIMIT 1`,
+    [displayName, date],
+  )
+  return rows[0] ? toDailyContent(rows[0]) : null
+}
