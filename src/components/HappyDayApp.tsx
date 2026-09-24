@@ -31,6 +31,18 @@ function Markdown({ children }: { children: string }) {
   )
 }
 
+// Song content may lead with a "T:<title>" line — if so, that's the hymn
+// title and the rest of the lines are the lyrics; otherwise the whole string
+// is lyrics with no separate title.
+function parseSongTitle(song: string): { title: string; body: string } {
+  const [firstLine, ...rest] = song.split('\n')
+  const trimmedFirst = firstLine?.trim() ?? ''
+  if (!trimmedFirst.startsWith('T:')) {
+    return { title: '', body: song }
+  }
+  return { title: trimmedFirst.slice(2).trim(), body: rest.join('\n').trim() }
+}
+
 type Screen = 'home' | 'passage' | 'resources' | 'profile'
 
 export type Group = { id: string; label: string }
@@ -151,13 +163,14 @@ function HappyDayApp({
         supplementary: fetchedContent.supplementary,
       }
     : GROUP_CONTENT[group]
-  const hymns: Hymn[] = groupContent
+  const song = groupContent ? parseSongTitle(groupContent.song) : null
+  const hymns: Hymn[] = groupContent && song
     ? [
         {
           no: '—',
-          title: '',
+          title: song.title,
           meta: '',
-          verses: [groupContent.song],
+          verses: song.body ? [song.body] : [],
           songUrl: groupContent.songUrl,
         },
       ]
