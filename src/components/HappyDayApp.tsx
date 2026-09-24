@@ -305,20 +305,6 @@ function HappyDayApp({
               ))}
             </section>
 
-            <div className="mx-[18px] mt-[18px] mb-6 flex items-end justify-between border-t-2 border-ink pt-3.5">
-              <span className="text-[13px] leading-snug font-medium text-ash-800">
-                {read
-                  ? `${streak} days in a row. Today is done.`
-                  : `${streak} days in a row. Keep it going.`}
-              </span>
-              <button
-                type="button"
-                onClick={() => setScreen('profile')}
-                className="text-xs font-bold tracking-[0.08em] text-accent-700"
-              >
-                HISTORY
-              </button>
-            </div>
           </div>
         )}
 
