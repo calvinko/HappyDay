@@ -96,7 +96,9 @@ function HappyDayApp({
   navModel = 'tabs',
   groups = DEFAULT_GROUPS,
 }: Props) {
-  const [screen, setScreen] = useState<Screen>('home')
+  const [screen, setScreen] = useState<Screen>(() =>
+    readName() ? 'home' : 'profile',
+  )
   const [read, setRead] = useState(false)
   const [size, setSize] = useState(15)
   const [reminder, setReminder] = useState(true)
