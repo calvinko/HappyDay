@@ -21,36 +21,22 @@ async function getContent(url: string): Promise<DailyContent | null> {
 }
 
 // GET /api/content/group/:groupId — see server/src/routes/content.ts.
-// Returns null when no content is assigned to that group for the date.
-export function fetchGroupContent(
-  groupId: string,
-  date?: string,
-): Promise<DailyContent | null> {
-  const query = date ? `?date=${encodeURIComponent(date)}` : ''
-  return getContent(
-    `${API_BASE}/api/content/group/${encodeURIComponent(groupId)}${query}`,
-  )
+// Returns the group's most recently assigned content, or null if it has none.
+export function fetchGroupContent(groupId: string): Promise<DailyContent | null> {
+  return getContent(`${API_BASE}/api/content/group/${encodeURIComponent(groupId)}`)
 }
 
 // GET /api/content/user/:userId — see server/src/routes/content.ts.
-// Returns null when no content is assigned to that user for the date.
-export function fetchUserContent(
-  userId: number,
-  date?: string,
-): Promise<DailyContent | null> {
-  const query = date ? `?date=${encodeURIComponent(date)}` : ''
-  return getContent(`${API_BASE}/api/content/user/${userId}${query}`)
+// Returns the user's most recently assigned content, or null if they have none.
+export function fetchUserContent(userId: number): Promise<DailyContent | null> {
+  return getContent(`${API_BASE}/api/content/user/${userId}`)
 }
 
 // GET /api/content/user/by-name/:name — see server/src/routes/content.ts.
 // The client only has a freely-typed display name (no real account/id), so
 // user-specific content is looked up by name instead of a numeric user id.
-export function fetchUserContentByName(
-  name: string,
-  date?: string,
-): Promise<DailyContent | null> {
-  const query = date ? `?date=${encodeURIComponent(date)}` : ''
+export function fetchUserContentByName(name: string): Promise<DailyContent | null> {
   return getContent(
-    `${API_BASE}/api/content/user/by-name/${encodeURIComponent(name)}${query}`,
+    `${API_BASE}/api/content/user/by-name/${encodeURIComponent(name)}`,
   )
 }

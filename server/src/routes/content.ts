@@ -7,18 +7,10 @@ import {
 
 export const contentRouter = Router()
 
-function todayDate(): string {
-  return new Date().toISOString().slice(0, 10)
-}
-
-function dateParam(req: { query: { date?: unknown } }): string {
-  return typeof req.query.date === 'string' ? req.query.date : todayDate()
-}
-
 contentRouter.get('/group/:groupId', async (req, res) => {
-  const content = await findContentForGroup(req.params.groupId, dateParam(req))
+  const content = await findContentForGroup(req.params.groupId)
   if (!content) {
-    res.status(404).json({ error: 'no content for this group and date' })
+    res.status(404).json({ error: 'no content for this group' })
     return
   }
   res.json(content)
@@ -26,9 +18,9 @@ contentRouter.get('/group/:groupId', async (req, res) => {
 
 // Registered before /user/:userId so "by-name" isn't swallowed as a userId.
 contentRouter.get('/user/by-name/:name', async (req, res) => {
-  const content = await findContentForUserByName(req.params.name, dateParam(req))
+  const content = await findContentForUserByName(req.params.name)
   if (!content) {
-    res.status(404).json({ error: 'no content for this user and date' })
+    res.status(404).json({ error: 'no content for this user' })
     return
   }
   res.json(content)
@@ -41,9 +33,9 @@ contentRouter.get('/user/:userId', async (req, res) => {
     return
   }
 
-  const content = await findContentForUser(userId, dateParam(req))
+  const content = await findContentForUser(userId)
   if (!content) {
-    res.status(404).json({ error: 'no content for this user and date' })
+    res.status(404).json({ error: 'no content for this user' })
     return
   }
   res.json(content)

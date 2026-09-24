@@ -41,22 +41,20 @@ const SELECT_COLUMNS =
 
 export async function findContentForGroup(
   groupId: string,
-  date: string,
 ): Promise<DailyContent | null> {
   const [rows] = await pool.query<DailyContentRow[]>(
-    `SELECT ${SELECT_COLUMNS} FROM daily_content WHERE group_id = ? AND content_date = ? LIMIT 1`,
-    [groupId, date],
+    `SELECT ${SELECT_COLUMNS} FROM daily_content WHERE group_id = ? ORDER BY content_date DESC LIMIT 1`,
+    [groupId],
   )
   return rows[0] ? toDailyContent(rows[0]) : null
 }
 
 export async function findContentForUser(
   userId: number,
-  date: string,
 ): Promise<DailyContent | null> {
   const [rows] = await pool.query<DailyContentRow[]>(
-    `SELECT ${SELECT_COLUMNS} FROM daily_content WHERE user_id = ? AND content_date = ? LIMIT 1`,
-    [userId, date],
+    `SELECT ${SELECT_COLUMNS} FROM daily_content WHERE user_id = ? ORDER BY content_date DESC LIMIT 1`,
+    [userId],
   )
   return rows[0] ? toDailyContent(rows[0]) : null
 }
@@ -66,7 +64,6 @@ export async function findContentForUser(
 // by name instead.
 export async function findContentForUserByName(
   displayName: string,
-  date: string,
 ): Promise<DailyContent | null> {
   const columns = SELECT_COLUMNS.split(', ')
     .map((c) => `dc.${c}`)
@@ -74,9 +71,10 @@ export async function findContentForUserByName(
   const [rows] = await pool.query<DailyContentRow[]>(
     `SELECT ${columns} FROM daily_content dc
      JOIN users u ON u.id = dc.user_id
-     WHERE u.display_name = ? AND dc.content_date = ?
+     WHERE u.display_name = ?
+     ORDER BY dc.content_date DESC
      LIMIT 1`,
-    [displayName, date],
+    [displayName],
   )
   return rows[0] ? toDailyContent(rows[0]) : null
 }
