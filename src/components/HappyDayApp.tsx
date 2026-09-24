@@ -39,6 +39,7 @@ function parseSongTitle(song: string): { title: string; body: string } {
   if (!trimmedFirst.startsWith('T:')) {
     return { title: '', body: song }
   }
+  console.log(rest);
   return { title: trimmedFirst.slice(2).trim(), body: rest.join('\n').trim() }
 }
 
