@@ -39,8 +39,14 @@ function parseSongTitle(song: string): { title: string; body: string } {
   if (!trimmedFirst.startsWith('T:')) {
     return { title: '', body: song }
   }
-  console.log(rest);
   return { title: trimmedFirst.slice(2).trim(), body: rest.join('\n').trim() }
+}
+
+function timeOfDayGreeting(): string {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good morning'
+  if (hour < 17) return 'Good afternoon'
+  return 'Good evening'
 }
 
 type Screen = 'home' | 'passage' | 'resources' | 'profile'
@@ -180,7 +186,6 @@ function HappyDayApp({
     song: hymns[0].title,
     supplementary: null,
   }
-  const streak = TODAY.baseStreak + (read ? 1 : 0)
   const signedIn = name !== ''
   const firstName = name.split(' ')[0]
   const chrome = screen !== 'passage'
@@ -335,22 +340,15 @@ function HappyDayApp({
               {read
                 ? 'Good to see you again.'
                 : signedIn
-                  ? `Good morning, ${firstName}.`
-                  : 'Good morning.'}
+                  ? `${timeOfDayGreeting()}, ${firstName}.`
+                  : `${timeOfDayGreeting()}.`}
             </h1>
-            <p className="mb-[18px] text-sm font-medium text-ash-700">
-              {streak} days in a row.
-              {read ? ' Today is done.' : ' Keep it going.'}
-            </p>
 
             <section className="mb-3.5 border-2 border-ink bg-surface p-4">
               <div className={`${KICKER} mb-2`}>PASSAGE</div>
               <h2 className="mb-2 text-[26px] leading-tight font-extrabold">
                 <Markdown>{content.passage}</Markdown>
               </h2>
-              <p className="mb-4 text-[13px] font-medium text-ash-700">
-                14 verses · about 3 minutes
-              </p>
               <button
                 type="button"
                 onClick={() => setScreen('passage')}
