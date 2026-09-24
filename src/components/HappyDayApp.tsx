@@ -54,7 +54,6 @@ type Screen = 'home' | 'passage' | 'resources' | 'profile'
 export type Group = { id: string; label: string }
 
 type Props = {
-  homeLayout?: 'poster' | 'cards'
   navModel?: 'tabs' | 'top'
   groups?: Group[]
 }
@@ -110,7 +109,6 @@ function writeGroup(value: string) {
 }
 
 function HappyDayApp({
-  homeLayout = 'poster',
   navModel = 'tabs',
   groups = DEFAULT_GROUPS,
 }: Props) {
@@ -265,7 +263,7 @@ function HappyDayApp({
       )}
 
       <div className="flex-1 overflow-x-hidden overflow-y-auto [scrollbar-width:none]">
-        {screen === 'home' && homeLayout === 'poster' && (
+        {screen === 'home' && (
           <div className="animate-hd-in">
             <div className="flex items-baseline justify-between border-b-2 border-ink px-[18px] pt-4 pb-3.5">
               <span className="text-[22px] font-black tracking-[0.14em]">
@@ -276,7 +274,13 @@ function HappyDayApp({
               </span>
             </div>
 
-            <section className="border-b-2 border-ink px-[18px] pt-[22px] pb-5">
+            <p className="px-[18px] pt-3.5 text-sm font-semibold text-ash-700">
+              {signedIn
+                ? `${timeOfDayGreeting()}, ${firstName}.`
+                : `${timeOfDayGreeting()}.`}
+            </p>
+
+            <section className="border-b-2 border-ink px-[18px] pt-3.5 pb-5">
               <div className={`${KICKER} mb-2.5`}>TODAY&rsquo;S PASSAGE</div>
               <p className="mb-[18px] text-base leading-relaxed text-ash-800 [text-wrap:pretty]">
                 <Markdown>{content.passage}</Markdown>
@@ -323,92 +327,6 @@ function HappyDayApp({
               ))}
             </section>
 
-          </div>
-        )}
-
-        {screen === 'home' && homeLayout === 'cards' && (
-          <div className="animate-hd-in px-4 pt-4 pb-6">
-            <div className="mb-1.5 flex items-baseline justify-between">
-              <span className="text-[19px] font-black tracking-[0.14em]">
-                HAPPY DAY
-              </span>
-              <span className="text-xs font-semibold text-ash-700">
-                {TODAY.dateLong}
-              </span>
-            </div>
-            <h1 className="mt-2.5 mb-1 text-3xl leading-tight font-extrabold">
-              {read
-                ? 'Good to see you again.'
-                : signedIn
-                  ? `${timeOfDayGreeting()}, ${firstName}.`
-                  : `${timeOfDayGreeting()}.`}
-            </h1>
-
-            <section className="mb-3.5 border-2 border-ink bg-surface p-4">
-              <div className={`${KICKER} mb-2`}>PASSAGE</div>
-              <h2 className="mb-2 text-[26px] leading-tight font-extrabold">
-                <Markdown>{content.passage}</Markdown>
-              </h2>
-              <button
-                type="button"
-                onClick={() => setScreen('passage')}
-                className="hidden w-full items-center gap-2.5 bg-accent px-3.5 py-3 text-left text-sm font-bold tracking-wide text-white hover:bg-accent-600"
-              >
-                <span className="flex-1">
-                  {read ? 'Read again' : 'Read the whole chapter'}
-                </span>
-                <span>&rarr;</span>
-              </button>
-            </section>
-
-            {hymns.map((h) => (
-              <div
-                key={h.no}
-                className="mb-3 border-2 border-ink bg-surface p-3.5"
-              >
-                <div className="flex items-center gap-3.5">
-                  <span className="min-w-[48px] text-[22px] font-extrabold text-accent">
-                    {h.no}
-                  </span>
-                  <span className="flex flex-1 flex-col gap-[3px]">
-                    <span className="text-[11px] font-bold tracking-[0.12em] text-ash-700">
-                      HYMN
-                    </span>
-                    <span className="text-base font-bold">{h.title}</span>
-                  </span>
-                </div>
-                {h.verses.map((v, i) => (
-                  <p
-                    key={i}
-                    className="mt-3 whitespace-pre-line leading-[1.65] [text-wrap:pretty]"
-                  >
-                    <Markdown>{v}</Markdown>
-                  </p>
-                ))}
-                {h.songUrl && (
-                  <audio controls className="mt-3 w-full" src={h.songUrl} />
-                )}
-              </div>
-            ))}
-
-            <div className="flex items-center justify-between gap-2 border-2 border-ink px-4 py-3.5">
-              <span className="text-[13px] font-semibold">This week</span>
-              <span className="flex gap-1.5">
-                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, i) => {
-                  const on = i < 4 || (i === 4 && read)
-                  return (
-                    <span
-                      key={`${d}-${i}`}
-                      className={`flex h-[26px] w-[26px] items-center justify-center border-2 border-ink text-[10px] font-bold ${
-                        on ? 'bg-accent text-white' : 'bg-ground text-ash-400'
-                      }`}
-                    >
-                      {d}
-                    </span>
-                  )
-                })}
-              </span>
-            </div>
           </div>
         )}
 

@@ -8,8 +8,8 @@ const GROUPS: Group[] = [
 ]
 
 function App() {
-  // homeLayout: 'poster' | 'cards'  ·  navModel: 'tabs' | 'top'
-  return <HappyDayApp homeLayout="poster" navModel="tabs" groups={GROUPS} />
+  // navModel: 'tabs' | 'top'
+  return <HappyDayApp navModel="tabs" groups={GROUPS} />
 }
 
 export default App
