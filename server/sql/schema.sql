@@ -1,14 +1,15 @@
 -- HappyDay server: user login schema (MySQL / InnoDB)
 
 CREATE TABLE IF NOT EXISTS users (
-  id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  username       VARCHAR(50)  NOT NULL,
-  password_hash  VARCHAR(255) NOT NULL,
-  display_name   VARCHAR(100) NOT NULL,
-  group_id       VARCHAR(50)  NOT NULL DEFAULT 'sj_senior',
-  user_role      ENUM('user', 'groupadmin', 'appadmin') NOT NULL DEFAULT 'user',
-  created_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  last_login_at  TIMESTAMP    NULL,
+  id                 INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  username           VARCHAR(50)  NOT NULL,
+  password_hash      VARCHAR(255) NOT NULL,
+  display_name       VARCHAR(100) NOT NULL,
+  group_id           VARCHAR(50)  NOT NULL DEFAULT 'sj_senior',
+  user_role          ENUM('user', 'groupadmin', 'appadmin') NOT NULL DEFAULT 'user',
+  default_font_size  SMALLINT UNSIGNED NOT NULL DEFAULT 15,
+  created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  last_login_at      TIMESTAMP    NULL,
   UNIQUE KEY uq_users_username (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
