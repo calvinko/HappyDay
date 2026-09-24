@@ -9,7 +9,9 @@ export type DailyContent = {
   supplementary: string | null
 }
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'https://kosolution.net/happyday/'
+const API_BASE = (
+  import.meta.env.VITE_API_BASE_URL ?? 'https://kosolution.net/happyday'
+).replace(/\/+$/, '')
 
 async function getContent(url: string): Promise<DailyContent | null> {
   const res = await fetch(url)
