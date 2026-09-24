@@ -264,7 +264,7 @@ function HappyDayApp({
               <button
                 type="button"
                 onClick={() => setScreen('passage')}
-                className="flex w-full items-center gap-2.5 bg-accent px-4 py-[15px] text-left text-[15px] font-bold tracking-wide text-white hover:bg-accent-600 active:bg-accent-700"
+                className="hidden w-full items-center gap-2.5 bg-accent px-4 py-[15px] text-left text-[15px] font-bold tracking-wide text-white hover:bg-accent-600 active:bg-accent-700"
               >
                 <span className="flex-1">
                   {read ? 'Read again' : 'Read the whole chapter'}
@@ -353,7 +353,7 @@ function HappyDayApp({
               <button
                 type="button"
                 onClick={() => setScreen('passage')}
-                className="flex w-full items-center gap-2.5 bg-accent px-3.5 py-3 text-left text-sm font-bold tracking-wide text-white hover:bg-accent-600"
+                className="hidden w-full items-center gap-2.5 bg-accent px-3.5 py-3 text-left text-sm font-bold tracking-wide text-white hover:bg-accent-600"
               >
                 <span className="flex-1">
                   {read ? 'Read again' : 'Read the whole chapter'}
