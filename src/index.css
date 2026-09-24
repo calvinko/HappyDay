@@ -74,8 +74,10 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* In @layer base so Tailwind's utilities (bg-*, border-*) still win on buttons —
-   unlayered rules beat every layered one regardless of specificity. */
+/* In @layer base so Tailwind's utilities (bg-*, border-*, text-*) still win —
+   unlayered rules beat every layered one regardless of specificity. This lets
+   markdown-rendered headings (passage/song content, see data.ts) get a size
+   scale while hand-written h1/h2 page titles keep their explicit text-* size. */
 @layer base {
   button {
     font: inherit;
@@ -83,6 +85,31 @@ button {
     background: none;
     border: 0;
     cursor: pointer;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+    font-weight: 800;
+  }
+  h2 {
+    font-size: 1.375rem;
+    font-weight: 800;
+  }
+  h3 {
+    font-size: 1.1875rem;
+    font-weight: 700;
+  }
+  h4 {
+    font-size: 1.0625rem;
+    font-weight: 700;
+  }
+  h5 {
+    font-size: 1rem;
+    font-weight: 700;
+  }
+  h6 {
+    font-size: 0.9375rem;
+    font-weight: 700;
   }
 }
 
