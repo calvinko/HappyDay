@@ -42,10 +42,11 @@ export async function createUser(
   username: string,
   passwordHash: string,
   displayName: string,
+  groupId: string,
 ): Promise<User> {
   await pool.query<ResultSetHeader>(
-    'INSERT INTO users (username, password_hash, display_name) VALUES (?, ?, ?)',
-    [username, passwordHash, displayName],
+    'INSERT INTO users (username, password_hash, display_name, group_id) VALUES (?, ?, ?, ?)',
+    [username, passwordHash, displayName, groupId],
   )
   const user = await findUserByUsername(username)
   if (!user) throw new Error('Failed to load user after insert')

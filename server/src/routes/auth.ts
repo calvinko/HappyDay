@@ -9,19 +9,26 @@ const SALT_ROUNDS = 12
 export const authRouter = Router()
 
 authRouter.post('/register', async (req, res) => {
-  const { username, password, displayName } = req.body ?? {}
+  const { username, password, displayName, groupId } = req.body ?? {}
 
   if (
     typeof username !== 'string' ||
     typeof password !== 'string' ||
-    typeof displayName !== 'string'
+    typeof displayName !== 'string' ||
+    typeof groupId !== 'string'
   ) {
-    res.status(400).json({ error: 'username, password, and displayName are required' })
+    res.status(400).json({ error: 'username, password, displayName, and groupId are required' })
     return
   }
-  if (username.trim().length < 3 || password.length < 8 || displayName.trim().length === 0) {
+  if (
+    username.trim().length < 3 ||
+    password.length < 8 ||
+    displayName.trim().length === 0 ||
+    groupId.trim().length === 0
+  ) {
     res.status(400).json({
-      error: 'username must be at least 3 characters, password at least 8, and displayName non-empty',
+      error:
+        'username must be at least 3 characters, password at least 8, displayName non-empty, and groupId non-empty',
     })
     return
   }
@@ -33,7 +40,7 @@ authRouter.post('/register', async (req, res) => {
   }
 
   const passwordHash = await bcrypt.hash(password, SALT_ROUNDS)
-  const user = await createUser(username.trim(), passwordHash, displayName.trim())
+  const user = await createUser(username.trim(), passwordHash, displayName.trim(), groupId.trim())
 
   const token = jwt.sign({ sub: user.id, username: user.username }, env.jwtSecret, {
     expiresIn: '30d',

@@ -111,20 +111,23 @@ export const GROUP_MEMBERS: Record<string, string[]> = {
 export type Member = {
   id: string
   name: string
+  username: string
   aliasesName: string[]
   remark: string
 }
 
+// username matches the values seeded by server/sql/seed_users.sql (each
+// member's display name with spaces stripped) — keep the two in sync.
 export const MEMBERS: Member[] = [
-  { id: 'calvin-ko', name: 'Calvin Ko', aliasesName: [], remark: '' },
-  { id: 'ivy-chan', name: 'Ivy Chan', aliasesName: [], remark: '' },
-  { id: 'kwok-ching', name: 'Kwok Ching', aliasesName: [], remark: '' },
-  { id: 'may-tsui', name: 'May Tsui', aliasesName: [], remark: '' },
-  { id: 'catherine', name: 'Catherine', aliasesName: [], remark: '' },
-  { id: 'rick-ng', name: 'Rick Ng', aliasesName: [], remark: '' },
-  { id: 'yvonne-ho', name: 'Yvonne Ho', aliasesName: [], remark: '' },
-  { id: 'james-leung', name: 'James Leung', aliasesName: [], remark: '' },
-  { id: 'linda-chiu', name: 'Linda Chiu', aliasesName: [], remark: '' },
-  { id: 'patrick-chiu', name: 'Patrick Chiu', aliasesName: [], remark: '' },
-  { id: 'honyuen', name: 'HonYuen', aliasesName: [], remark: '' },
+  { id: 'calvin-ko', name: 'Calvin Ko', username: 'CalvinKo', aliasesName: [], remark: '' },
+  { id: 'ivy-chan', name: 'Ivy Chan', username: 'IvyChan', aliasesName: [], remark: '' },
+  { id: 'kwok-ching', name: 'Kwok Ching', username: 'KwokChing', aliasesName: [], remark: '' },
+  { id: 'may-tsui', name: 'May Tsui', username: 'MayTsui', aliasesName: [], remark: '' },
+  { id: 'catherine', name: 'Catherine', username: 'Catherine', aliasesName: [], remark: '' },
+  { id: 'rick-ng', name: 'Rick Ng', username: 'RickNg', aliasesName: [], remark: '' },
+  { id: 'yvonne-ho', name: 'Yvonne Ho', username: 'YvonneHo', aliasesName: [], remark: '' },
+  { id: 'james-leung', name: 'James Leung', username: 'JamesLeung', aliasesName: [], remark: '' },
+  { id: 'linda-chiu', name: 'Linda Chiu', username: 'LindaChiu', aliasesName: [], remark: '' },
+  { id: 'patrick-chiu', name: 'Patrick Chiu', username: 'PatrickChiu', aliasesName: [], remark: '' },
+  { id: 'honyuen', name: 'HonYuen', username: 'HonYuen', aliasesName: [], remark: '' },
 ]

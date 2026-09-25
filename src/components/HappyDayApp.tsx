@@ -3,7 +3,8 @@ import ReactMarkdown from 'react-markdown'
 import remarkBreaks from 'remark-breaks'
 import {
   fetchGroupContent,
-  fetchUserContentByName,
+  fetchUserContent,
+  loginOrRegister,
   type DailyContent,
 } from '../lib/api'
 import {
@@ -70,9 +71,21 @@ const DEFAULT_GROUPS: Group[] = [
 
 const NAME_KEY = 'happyday.name'
 const GROUP_KEY = 'happyday.group'
+const USER_ID_KEY = 'happyday.userId'
+const TOKEN_KEY = 'happyday.token'
 const INVITE_CODE = '43236'
 
+// The sign-in flow never shows a password field. Username is the display
+// name with spaces stripped, and password is derived from that username plus
+// the shared invite code (server still requires one) — matching the scheme
+// server/sql/seed_users.sql pre-seeds accounts with.
+function usernameFor(name: string): string {
+  return name.replace(/\s+/g, '')
+}
 
+function passwordFor(username: string): string {
+  return `${username}-${INVITE_CODE}`
+}
 
 function readName(): string {
   try {
@@ -108,6 +121,29 @@ function writeGroup(value: string) {
   }
 }
 
+function readUserId(): number | null {
+  try {
+    const raw = localStorage.getItem(USER_ID_KEY)
+    return raw ? Number(raw) : null
+  } catch {
+    return null
+  }
+}
+
+function writeAuth(userId: number | null, token: string) {
+  try {
+    if (userId) {
+      localStorage.setItem(USER_ID_KEY, String(userId))
+      localStorage.setItem(TOKEN_KEY, token)
+    } else {
+      localStorage.removeItem(USER_ID_KEY)
+      localStorage.removeItem(TOKEN_KEY)
+    }
+  } catch {
+    /* private mode or blocked storage — auth just won't persist */
+  }
+}
+
 function HappyDayApp({
   navModel = 'tabs',
   groups = DEFAULT_GROUPS,
@@ -120,10 +156,13 @@ function HappyDayApp({
   const [reminder, setReminder] = useState(true)
   const [name, setName] = useState(() => readName())
   const [group, setGroup] = useState(() => readGroup())
+  const [userId, setUserId] = useState(() => readUserId())
   const [draft, setDraft] = useState('')
   const [draftGroup, setDraftGroup] = useState('')
   const [draftCode, setDraftCode] = useState('')
   const [codeError, setCodeError] = useState(false)
+  const [nameError, setNameError] = useState(false)
+  const [signingIn, setSigningIn] = useState(false)
   const [showNameSuggestions, setShowNameSuggestions] = useState(false)
   const [signInStep, setSignInStep] = useState<'code' | 'group' | 'name'>(
     'code',
@@ -139,8 +178,9 @@ function HappyDayApp({
     if (!group) return
     let cancelled = false
     // Checks for content assigned to this person first, then falls back to
-    // their group's content (see fetchUserContentByName/fetchGroupContent).
-    fetchUserContentByName(name)
+    // their group's content (see fetchUserContent/fetchGroupContent).
+    const userContent = userId ? fetchUserContent(userId) : Promise.resolve(null)
+    userContent
       .catch(() => null)
       .then((data) => data ?? fetchGroupContent(group).catch(() => null))
       .then((data) => {
@@ -149,7 +189,7 @@ function HappyDayApp({
     return () => {
       cancelled = true
     }
-  }, [name, group])
+  }, [name, group, userId])
 
   const fetchedContent =
     remoteContent?.name === name && remoteContent?.group === group
@@ -209,24 +249,43 @@ function HappyDayApp({
     setSignInStep('name')
   }
 
-  const signIn = () => {
+  const signIn = async () => {
     const clean = draft.trim().replace(/\s+/g, ' ')
     if (!clean || !draftGroup) return
-    setName(clean)
-    writeName(clean)
-    setGroup(draftGroup)
-    writeGroup(draftGroup)
-    setDraft('')
-    setDraftGroup('')
-    setDraftCode('')
-    setCodeError(false)
-    setShowNameSuggestions(false)
-    setSignInStep('code')
+    setNameError(false)
+    setSigningIn(true)
+    try {
+      const username = usernameFor(clean)
+      const auth = await loginOrRegister(
+        username,
+        passwordFor(username),
+        clean,
+        draftGroup,
+      )
+      setName(clean)
+      writeName(clean)
+      setGroup(draftGroup)
+      writeGroup(draftGroup)
+      setUserId(auth.user.id)
+      writeAuth(auth.user.id, auth.token)
+      setDraft('')
+      setDraftGroup('')
+      setDraftCode('')
+      setCodeError(false)
+      setShowNameSuggestions(false)
+      setSignInStep('code')
+    } catch {
+      setNameError(true)
+    } finally {
+      setSigningIn(false)
+    }
   }
 
   const signOut = () => {
     setName('')
     writeName('')
+    setUserId(null)
+    writeAuth(null, '')
     setDraftGroup('')
     setDraftCode('')
     setCodeError(false)
@@ -556,7 +615,7 @@ function HappyDayApp({
             className="animate-hd-in flex min-h-full flex-col px-[18px] pt-[18px] pb-7"
             onSubmit={(e) => {
               e.preventDefault()
-              signIn()
+              void signIn()
             }}
           >
             <div className="flex items-center gap-3">
@@ -610,6 +669,7 @@ function HappyDayApp({
                   onChange={(e) => {
                     setDraft(e.target.value)
                     setShowNameSuggestions(true)
+                    setNameError(false)
                   }}
                   onFocus={() => setShowNameSuggestions(true)}
                   onBlur={() => setShowNameSuggestions(false)}
@@ -642,16 +702,24 @@ function HappyDayApp({
               </div>
               <button
                 type="submit"
-                disabled={draft.trim() === ''}
+                disabled={draft.trim() === '' || signingIn}
                 className="mt-3.5 flex w-full items-center gap-2.5 border-2 border-accent bg-accent px-4 py-[13px] text-left text-[15px] font-bold tracking-wide text-white hover:border-accent-600 hover:bg-accent-600 active:border-accent-700 active:bg-accent-700 disabled:cursor-not-allowed disabled:border-ash-400 disabled:bg-transparent disabled:text-ash-500"
               >
-                <span className="flex-1">Continue</span>
+                <span className="flex-1">
+                  {signingIn ? 'Signing in…' : 'Continue'}
+                </span>
                 <span className="text-lg">&rarr;</span>
               </button>
+              {nameError && (
+                <p className="mt-3.5 text-[13px] leading-snug font-bold text-accent-700">
+                  Couldn&rsquo;t sign you in. Check your connection and try
+                  again.
+                </p>
+              )}
             </div>
 
             <p className="mt-5 text-[13px] leading-snug font-medium text-ash-700">
-              No account and no password. Your name stays on this device.
+              No password to remember. Just your name.
             </p>
 
             <div className="mt-auto border-t-2 border-ink pt-3.5">
