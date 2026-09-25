@@ -8,8 +8,8 @@ import {
   type DailyContent,
 } from '../lib/api'
 import {
+  BUILTIN_GROUPS,
   GROUP_CONTENT,
-  GROUP_MEMBERS,
   HYMNS,
   TODAY,
   VERSES,
@@ -231,7 +231,7 @@ function HappyDayApp({
   const labelForGroup = (id: string) =>
     groups.find((g) => g.id === id)?.label ?? id
 
-  const nameSuggestions = (GROUP_MEMBERS[draftGroup] ?? []).filter((m) =>
+  const nameSuggestions = (BUILTIN_GROUPS[draftGroup] ?? []).filter((m) =>
     m.toLowerCase().includes(draft.trim().toLowerCase()),
   )
 
@@ -771,14 +771,19 @@ function HappyDayApp({
                 <button
                   type="button"
                   onClick={shrink}
-                  className={`${ICON_BTN} text-xs`}
+                  disabled={size <= 15}
+                  className={`${ICON_BTN} text-xs disabled:cursor-not-allowed disabled:opacity-40`}
                 >
                   A-
                 </button>
+                <span className="min-w-[34px] text-center text-[13px] font-bold text-ash-700">
+                  {size}px
+                </span>
                 <button
                   type="button"
                   onClick={grow}
-                  className={`${ICON_BTN} text-sm`}
+                  disabled={size >= 26}
+                  className={`${ICON_BTN} text-sm disabled:cursor-not-allowed disabled:opacity-40`}
                 >
                   A+
                 </button>

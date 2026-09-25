@@ -1,4 +1,4 @@
--- Backfill `users` rows for the members already listed in GROUP_MEMBERS
+-- Backfill `users` rows for the members already listed in BUILTIN_GROUPS
 -- (src/lib/data.ts), so their accounts exist before they ever sign in.
 --
 -- username is the display_name with spaces stripped (e.g. "Calvin Ko" ->
@@ -19,7 +19,7 @@
 -- Safe to re-run: existing rows are matched by username and only
 -- display_name/group_id are refreshed, so it won't overwrite a password a
 -- member has since changed for real (via /api/auth routes, once that exists).
--- Keep this list in sync with GROUP_MEMBERS if that changes.
+-- Keep this list in sync with BUILTIN_GROUPS if that changes.
 --
 -- id is set explicitly starting at 1001, so seeded rows stay easy to spot.
 -- MySQL bumps the table's AUTO_INCREMENT counter past the highest id it

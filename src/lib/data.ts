@@ -94,7 +94,7 @@ export const GROUP_CONTENT: Record<string, GroupContent> = {
 }
 
 // Members currently in each group, keyed by the group ids in App.tsx's GROUPS.
-export const GROUP_MEMBERS: Record<string, string[]> = {
+export const BUILTIN_GROUPS: Record<string, string[]> = {
   sj_senior: [
     'Calvin Ko',
     'Ivy Chan',
@@ -107,27 +107,3 @@ export const GROUP_MEMBERS: Record<string, string[]> = {
   sf_senior: ['James Leung', 'Linda Chiu', 'Patrick Chiu'],
   bra_senior: ['HonYuen'],
 }
-
-export type Member = {
-  id: string
-  name: string
-  username: string
-  aliasesName: string[]
-  remark: string
-}
-
-// username matches the values seeded by server/sql/seed_users.sql (each
-// member's display name with spaces stripped) — keep the two in sync.
-export const MEMBERS: Member[] = [
-  { id: 'calvin-ko', name: 'Calvin Ko', username: 'CalvinKo', aliasesName: [], remark: '' },
-  { id: 'ivy-chan', name: 'Ivy Chan', username: 'IvyChan', aliasesName: [], remark: '' },
-  { id: 'kwok-ching', name: 'Kwok Ching', username: 'KwokChing', aliasesName: [], remark: '' },
-  { id: 'may-tsui', name: 'May Tsui', username: 'MayTsui', aliasesName: [], remark: '' },
-  { id: 'catherine', name: 'Catherine', username: 'Catherine', aliasesName: [], remark: '' },
-  { id: 'rick-ng', name: 'Rick Ng', username: 'RickNg', aliasesName: [], remark: '' },
-  { id: 'yvonne-ho', name: 'Yvonne Ho', username: 'YvonneHo', aliasesName: [], remark: '' },
-  { id: 'james-leung', name: 'James Leung', username: 'JamesLeung', aliasesName: [], remark: '' },
-  { id: 'linda-chiu', name: 'Linda Chiu', username: 'LindaChiu', aliasesName: [], remark: '' },
-  { id: 'patrick-chiu', name: 'Patrick Chiu', username: 'PatrickChiu', aliasesName: [], remark: '' },
-  { id: 'honyuen', name: 'HonYuen', username: 'HonYuen', aliasesName: [], remark: '' },
-]
