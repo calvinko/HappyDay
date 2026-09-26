@@ -341,7 +341,10 @@ function HappyDayApp({
 
             <section className="border-b-2 border-ink px-[18px] pt-3.5 pb-5">
               <div className={`${KICKER} mb-2.5`}>TODAY&rsquo;S PASSAGE</div>
-              <p className="mb-[18px] text-xl leading-relaxed text-ash-800 [text-wrap:pretty]">
+              <p
+                className="mb-[18px] leading-relaxed text-ash-800 [text-wrap:pretty]"
+                style={{ fontSize: size }}
+              >
                 <Markdown>{content.passage}</Markdown>
               </p>
               <button
@@ -374,7 +377,8 @@ function HappyDayApp({
                   {h.verses.map((v, i) => (
                     <span
                       key={i}
-                      className="mt-3 block text-xl leading-[1.65] [text-wrap:pretty]"
+                      className="mt-3 block leading-[1.65] [text-wrap:pretty]"
+                      style={{ fontSize: size }}
                     >
                       <Markdown>{v}</Markdown>
                     </span>
