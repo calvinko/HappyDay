@@ -32,7 +32,12 @@ export function fetchUserContent(userId: number): Promise<DailyContent | null> {
   return getContent(`${API_BASE}/api/content/user/${userId}`)
 }
 
-export type AuthUser = { id: number; username: string; displayName: string }
+export type AuthUser = {
+  id: number
+  username: string
+  displayName: string
+  defaultFontSize: number
+}
 export type AuthResult = { token: string; user: AuthUser }
 
 async function postAuth(
@@ -72,4 +77,22 @@ export async function loginOrRegister(
     throw new Error(`Registration failed: ${register.status}`)
   }
   return register.data
+}
+
+// GET /api/users/:userId — see server/src/routes/users.ts.
+// Returns the user's saved font size, or null if the request fails.
+export async function fetchUserFontSize(userId: number): Promise<number | null> {
+  const res = await fetch(`${API_BASE}/api/users/${userId}`)
+  if (!res.ok) return null
+  const data = (await res.json()) as { defaultFontSize: number }
+  return data.defaultFontSize
+}
+
+// PATCH /api/users/:userId/font-size — see server/src/routes/users.ts.
+export async function saveUserFontSize(userId: number, fontSize: number): Promise<void> {
+  await fetch(`${API_BASE}/api/users/${userId}/font-size`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fontSize }),
+  })
 }

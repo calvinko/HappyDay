@@ -45,9 +45,15 @@ authRouter.post('/register', async (req, res) => {
   const token = jwt.sign({ sub: user.id, username: user.username }, env.jwtSecret, {
     expiresIn: '30d',
   })
-  res
-    .status(201)
-    .json({ token, user: { id: user.id, username: user.username, displayName: user.displayName } })
+  res.status(201).json({
+    token,
+    user: {
+      id: user.id,
+      username: user.username,
+      displayName: user.displayName,
+      defaultFontSize: user.defaultFontSize,
+    },
+  })
 })
 
 authRouter.post('/login', async (req, res) => {
@@ -75,5 +81,13 @@ authRouter.post('/login', async (req, res) => {
   const token = jwt.sign({ sub: user.id, username: user.username }, env.jwtSecret, {
     expiresIn: '30d',
   })
-  res.json({ token, user: { id: user.id, username: user.username, displayName: user.displayName } })
+  res.json({
+    token,
+    user: {
+      id: user.id,
+      username: user.username,
+      displayName: user.displayName,
+      defaultFontSize: user.defaultFontSize,
+    },
+  })
 })

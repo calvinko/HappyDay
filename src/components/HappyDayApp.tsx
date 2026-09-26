@@ -4,7 +4,9 @@ import remarkBreaks from 'remark-breaks'
 import {
   fetchGroupContent,
   fetchUserContent,
+  fetchUserFontSize,
   loginOrRegister,
+  saveUserFontSize,
   type DailyContent,
 } from '../lib/api'
 import {
@@ -175,6 +177,17 @@ function HappyDayApp({
   } | null>(null)
 
   useEffect(() => {
+    if (!userId) return
+    let cancelled = false
+    fetchUserFontSize(userId).then((fontSize) => {
+      if (!cancelled && fontSize != null) setSize(fontSize)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [userId])
+
+  useEffect(() => {
     if (!group) return
     let cancelled = false
     // Checks for content assigned to this person first, then falls back to
@@ -293,8 +306,18 @@ function HappyDayApp({
     setSignInStep('code')
   }
 
-  const grow = () => setSize((s) => Math.min(26, s + 2))
-  const shrink = () => setSize((s) => Math.max(15, s - 2))
+  const grow = () =>
+    setSize((s) => {
+      const next = Math.min(26, s + 2)
+      if (userId) saveUserFontSize(userId, next).catch(() => {})
+      return next
+    })
+  const shrink = () =>
+    setSize((s) => {
+      const next = Math.max(15, s - 2)
+      if (userId) saveUserFontSize(userId, next).catch(() => {})
+      return next
+    })
 
   return (
     <div className="relative mx-auto flex h-svh w-full max-w-[760px] flex-col overflow-hidden bg-ground pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">

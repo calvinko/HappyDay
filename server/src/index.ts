@@ -3,6 +3,7 @@ import express from 'express'
 import { env } from './env.js'
 import { authRouter } from './routes/auth.js'
 import { contentRouter } from './routes/content.js'
+import { usersRouter } from './routes/users.js'
 
 const ALLOWED_ORIGINS = [
   /^https:\/\/happygoodday\.vercel\.app$/,
@@ -25,6 +26,7 @@ async function main() {
   app.use(express.json())
   app.use('/api/auth', authRouter)
   app.use('/api/content', contentRouter)
+  app.use('/api/users', usersRouter)
 
   app.listen(env.port, () => {
     console.log(`HappyDay server listening on port ${env.port}`)
