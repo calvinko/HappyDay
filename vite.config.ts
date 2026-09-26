@@ -22,13 +22,8 @@ export default defineConfig({
         theme_color: '#ec3013',
         icons: [
           {
-            src: 'pwa-192.png',
-            sizes: '192x192',
-            type: 'image/png',
-          },
-          {
-            src: 'pwa-512.png',
-            sizes: '512x512',
+            src: 'happyday.png',
+            sizes: '256x256',
             type: 'image/png',
           },
           {
