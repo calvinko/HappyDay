@@ -43,7 +43,7 @@ export async function findContentForGroup(
   groupId: string,
 ): Promise<DailyContent | null> {
   const [rows] = await pool.query<DailyContentRow[]>(
-    `SELECT ${SELECT_COLUMNS} FROM daily_content WHERE group_id = ? ORDER BY content_date DESC LIMIT 1`,
+    `SELECT ${SELECT_COLUMNS} FROM daily_content WHERE group_id = ? AND content_date <= CURDATE() ORDER BY content_date DESC LIMIT 1`,
     [groupId],
   )
   return rows[0] ? toDailyContent(rows[0]) : null
@@ -53,7 +53,7 @@ export async function findContentForUser(
   userId: number,
 ): Promise<DailyContent | null> {
   const [rows] = await pool.query<DailyContentRow[]>(
-    `SELECT ${SELECT_COLUMNS} FROM daily_content WHERE user_id = ? ORDER BY content_date DESC LIMIT 1`,
+    `SELECT ${SELECT_COLUMNS} FROM daily_content WHERE user_id = ? AND content_date <= CURDATE() ORDER BY content_date DESC LIMIT 1`,
     [userId],
   )
   return rows[0] ? toDailyContent(rows[0]) : null
