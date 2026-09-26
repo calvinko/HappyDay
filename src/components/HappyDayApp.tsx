@@ -154,7 +154,7 @@ function HappyDayApp({
     readName() ? 'home' : 'profile',
   )
   const [read, setRead] = useState(false)
-  const [size, setSize] = useState(15)
+  const [size, setSize] = useState(20)
   const [reminder, setReminder] = useState(true)
   const [name, setName] = useState(() => readName())
   const [group, setGroup] = useState(() => readGroup())
@@ -281,6 +281,7 @@ function HappyDayApp({
       writeGroup(draftGroup)
       setUserId(auth.user.id)
       writeAuth(auth.user.id, auth.token)
+      setSize(auth.user.defaultFontSize)
       setDraft('')
       setDraftGroup('')
       setDraftCode('')
