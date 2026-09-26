@@ -10,7 +10,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
+      includeAssets: ['happyday.png', 'apple-touch-icon.png'],
       manifest: {
         name: 'Happy Day',
         short_name: 'Happy Day',
