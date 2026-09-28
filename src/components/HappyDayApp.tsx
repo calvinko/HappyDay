@@ -357,11 +357,29 @@ function HappyDayApp({
               </span>
             </div>
 
-            <p className="px-[18px] pt-3.5 text-xl font-extrabold text-ink">
-              {signedIn
-                ? `${timeOfDayGreeting()}, ${firstName}.`
-                : `${timeOfDayGreeting()}.`}
-            </p>
+            <div className="flex items-center gap-3 px-[18px] pt-3.5">
+              <p className="flex-1 text-xl font-extrabold text-ink">
+                {signedIn
+                  ? `${timeOfDayGreeting()}, ${firstName}.`
+                  : `${timeOfDayGreeting()}.`}
+              </p>
+              <button
+                type="button"
+                onClick={shrink}
+                disabled={size <= 15}
+                className={`${ICON_BTN} text-xs disabled:cursor-not-allowed disabled:opacity-40`}
+              >
+                A-
+              </button>
+              <button
+                type="button"
+                onClick={grow}
+                disabled={size >= 26}
+                className={`${ICON_BTN} text-sm disabled:cursor-not-allowed disabled:opacity-40`}
+              >
+                A+
+              </button>
+            </div>
 
             <section className="border-b-2 border-ink px-[18px] pt-3.5 pb-5">
               <div className={`${KICKER} mb-2.5`}>TODAY&rsquo;S PASSAGE</div>
