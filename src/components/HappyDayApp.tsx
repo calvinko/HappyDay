@@ -180,7 +180,7 @@ function HappyDayApp({
     if (!userId) return
     let cancelled = false
     fetchUserFontSize(userId).then((fontSize) => {
-      if (!cancelled && fontSize != null) setSize(fontSize)
+      if (!cancelled && Number.isFinite(fontSize)) setSize(fontSize as number)
     })
     return () => {
       cancelled = true
@@ -281,7 +281,9 @@ function HappyDayApp({
       writeGroup(draftGroup)
       setUserId(auth.user.id)
       writeAuth(auth.user.id, auth.token)
-      setSize(auth.user.defaultFontSize)
+      if (Number.isFinite(auth.user.defaultFontSize)) {
+        setSize(auth.user.defaultFontSize)
+      }
       setDraft('')
       setDraftGroup('')
       setDraftCode('')
