@@ -810,30 +810,6 @@ function HappyDayApp({
                   <span className="block h-[18px] w-[18px] bg-ink" />
                 </span>
               </button>
-              <div className="flex items-center gap-3">
-                <span className="flex-1 text-[15px] font-semibold">
-                  Reading text size
-                </span>
-                <button
-                  type="button"
-                  onClick={shrink}
-                  disabled={size <= 15}
-                  className={`${ICON_BTN} text-xs disabled:cursor-not-allowed disabled:opacity-40`}
-                >
-                  A-
-                </button>
-                <span className="min-w-[34px] text-center text-[13px] font-bold text-ash-700">
-                  {size}px
-                </span>
-                <button
-                  type="button"
-                  onClick={grow}
-                  disabled={size >= 26}
-                  className={`${ICON_BTN} text-sm disabled:cursor-not-allowed disabled:opacity-40`}
-                >
-                  A+
-                </button>
-              </div>
               <button
                 type="button"
                 onClick={signOut}
