@@ -52,7 +52,7 @@ function timeOfDayGreeting(): string {
   return 'Good evening'
 }
 
-type Screen = 'home' | 'passage' | 'resources' | 'profile'
+type Screen = 'home' | 'passage' | 'resources' | 'hymn' | 'profile'
 
 export type Group = { id: string; label: string }
 
@@ -155,6 +155,8 @@ function HappyDayApp({
   )
   const [read, setRead] = useState(false)
   const [size, setSize] = useState(20)
+  const [selectedHymnNo, setSelectedHymnNo] = useState<string | null>(null)
+  const [hymnFrom, setHymnFrom] = useState<'home' | 'resources'>('resources')
   const [reminder, setReminder] = useState(true)
   const [name, setName] = useState(() => readName())
   const [group, setGroup] = useState(() => readGroup())
@@ -239,7 +241,15 @@ function HappyDayApp({
   }
   const signedIn = name !== ''
   const firstName = name.split(' ')[0]
-  const chrome = screen !== 'passage'
+  const chrome = screen !== 'passage' && screen !== 'hymn'
+  const selectedHymn =
+    hymns.find((h) => h.no === selectedHymnNo) ?? hymns[0]
+
+  const openHymn = (no: string, from: 'home' | 'resources') => {
+    setSelectedHymnNo(no)
+    setHymnFrom(from)
+    setScreen('hymn')
+  }
 
   const labelForGroup = (id: string) =>
     groups.find((g) => g.id === id)?.label ?? id
@@ -354,7 +364,7 @@ function HappyDayApp({
               <span className="text-[22px] font-black tracking-[0.14em]">
                 快樂每一天 HAPPY DAY
               </span>
-              <span className="text-xs font-semibold tracking-wide text-ash-700">
+              <span className="text-sm font-semibold tracking-wide text-ash-700">
                 {TODAY.dateLong}
               </span>
             </div>
@@ -501,7 +511,7 @@ function HappyDayApp({
               </button>
               <button
                 type="button"
-                onClick={() => setScreen('resources')}
+                onClick={() => openHymn(hymns[0].no, 'home')}
                 className="mt-5 flex w-full items-center gap-2.5 border-t border-ink/40 pt-3.5 text-left text-sm font-bold"
               >
                 <span className="flex-1">
@@ -522,31 +532,104 @@ function HappyDayApp({
               Hymns designated for {TODAY.dateLong}
             </p>
             {hymns.map((h) => (
-              <div key={h.no} className="border-t-2 border-ink py-4">
-                <div className="flex items-center gap-3.5">
-                  <span className="min-w-[58px] text-3xl font-extrabold text-accent">
-                    {h.no}
+              <button
+                key={h.no}
+                type="button"
+                onClick={() => openHymn(h.no, 'resources')}
+                className="flex w-full items-center gap-3.5 border-t-2 border-ink py-4 text-left hover:bg-surface"
+              >
+                <span className="min-w-[58px] text-3xl font-extrabold text-accent">
+                  {h.no}
+                </span>
+                <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
+                  <span className="text-lg font-bold">{h.title}</span>
+                  <span className="text-xs font-medium text-ash-700">
+                    {h.meta ||
+                      `${h.verses.length} verse${h.verses.length === 1 ? '' : 's'}`}
                   </span>
-                  <span className="flex flex-1 flex-col gap-[3px]">
-                    <span className="text-lg font-bold">{h.title}</span>
-                    <span className="text-xs font-medium text-ash-700">
-                      {h.meta}
+                  {h.verses[0] && (
+                    <span className="mt-0.5 line-clamp-1 text-[13px] text-ash-700">
+                      {h.verses[0].split('\n')[0]}
                     </span>
+                  )}
+                </span>
+                {h.songUrl && (
+                  <span
+                    aria-label="Recording available"
+                    className="text-lg text-accent-700"
+                  >
+                    &#9835;
                   </span>
-                </div>
-                {h.verses.map((v, i) => (
-                  <p
-                    key={i}
-                    className="mt-3 whitespace-pre-line leading-[1.65] [text-wrap:pretty]"
+                )}
+                <span className="text-xl text-ash-400" aria-hidden>
+                  &rarr;
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {screen === 'hymn' && selectedHymn && (
+          <div className="animate-hd-in">
+            <header className="sticky top-0 z-10 flex items-center gap-3 border-b-2 border-ink bg-ground px-[18px] py-3">
+              <button
+                type="button"
+                onClick={() => setScreen(hymnFrom)}
+                className="text-xl leading-none"
+              >
+                &larr;
+              </button>
+              <span className="flex-1 text-[15px] font-bold">
+                {selectedHymn.title}
+              </span>
+              <button
+                type="button"
+                onClick={shrink}
+                className={`${ICON_BTN} text-xs`}
+              >
+                A-
+              </button>
+              <button
+                type="button"
+                onClick={grow}
+                className={`${ICON_BTN} text-sm`}
+              >
+                A+
+              </button>
+            </header>
+            <div className="px-[18px] pt-5 pb-7">
+              <div className={`${KICKER} mb-1.5`}>
+                HYMN {selectedHymn.no}
+              </div>
+              <h1 className="mb-1 text-[28px] leading-tight font-extrabold">
+                {selectedHymn.title}
+              </h1>
+              {selectedHymn.meta && (
+                <p className="mb-4 text-[13px] font-medium text-ash-700">
+                  {selectedHymn.meta}
+                </p>
+              )}
+              {selectedHymn.songUrl && (
+                <audio
+                  controls
+                  className="mb-5 w-full"
+                  src={selectedHymn.songUrl}
+                />
+              )}
+              {selectedHymn.verses.map((v, i) => (
+                <p key={i} className="mb-4 flex items-start gap-2.5">
+                  <span className="min-w-[18px] pt-1 text-[11px] font-bold text-accent">
+                    {i + 1}
+                  </span>
+                  <span
+                    className="flex-1 whitespace-pre-line leading-[1.7] [text-wrap:pretty]"
+                    style={{ fontSize: size }}
                   >
                     <Markdown>{v}</Markdown>
-                  </p>
-                ))}
-                {h.songUrl && (
-                  <audio controls className="mt-3 w-full" src={h.songUrl} />
-                )}
-              </div>
-            ))}
+                  </span>
+                </p>
+              ))}
+            </div>
           </div>
         )}
 
