@@ -46,26 +46,19 @@ export const HYMNS: Hymn[] = [
   },
 ]
 
-export const HISTORY = [
-  { ref: 'Psalm 102:1–17', day: 'Yesterday', done: true },
-  { ref: 'Psalm 101', day: 'Mon', done: true },
-  { ref: 'Psalm 100', day: 'Sun', done: true },
-  { ref: 'Psalm 99', day: 'Sat', done: true },
-  { ref: 'Psalm 98', day: 'Fri', done: false },
-  { ref: 'Psalm 97', day: 'Thu', done: true },
-  { ref: 'Psalm 96', day: 'Wed', done: true },
-]
+function formatDateLong(date: Date): string {
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  })
+}
 
 export const TODAY = {
-  dateLong: 'Thu, Sep 17',
-  dayLabel: 'DAY 261',
+  dateLong: formatDateLong(new Date()),
   passageRef: 'Psalm 103:1–14',
   passageTitle: 'Bless the LORD, O my soul',
   translation: 'KING JAMES VERSION',
-  member: 'Sister Grace Lim',
-  memberMeta: 'Member since 2014 · San Jose',
-  totalRead: 612,
-  baseStreak: 24,
 }
 
 export type GroupContent = {

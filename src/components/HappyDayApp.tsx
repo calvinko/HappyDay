@@ -466,9 +466,7 @@ function HappyDayApp({
               </button>
             </header>
             <div className="px-[18px] pt-5 pb-2">
-              <div className={`${KICKER} mb-1.5`}>
-                {TODAY.dayLabel} &middot; {TODAY.translation}
-              </div>
+              <div className={`${KICKER} mb-1.5`}>{TODAY.translation}</div>
               <h1 className="mb-[18px] text-[28px] leading-tight font-extrabold">
                 {TODAY.passageTitle}
               </h1>
@@ -784,10 +782,11 @@ function HappyDayApp({
             <h1 className="mt-2.5 text-3xl leading-tight font-extrabold">
               {name}
             </h1>
-            <p className="mt-1.5 mb-5 text-[13px] font-medium text-ash-700">
-              {TODAY.memberMeta}
-              {group && ` · ${labelForGroup(group)}`}
-            </p>
+            {group && (
+              <p className="mt-1.5 mb-5 text-[13px] font-medium text-ash-700">
+                {labelForGroup(group)}
+              </p>
+            )}
             <div className="mt-[26px] flex flex-col gap-3.5 border-t-2 border-ink pt-4">
               <button
                 type="button"
