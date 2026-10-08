@@ -54,3 +54,29 @@ CREATE TABLE IF NOT EXISTS daily_content (
   CONSTRAINT fk_daily_content_group FOREIGN KEY (group_id)
     REFERENCES church_groups (name) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- The Resources pane's list of hymns for a user or group, assigned to exactly
+-- one of them (never both, never neither — see the CHECK constraint), same
+-- shape as daily_content's targeting. Unlike daily_content, resources are not
+-- date-scoped — they're a standing list that doesn't rotate day to day.
+-- Stores only a reference (song_slug) into the song catalog, not the hymn's
+-- content itself — see server/data/songs.json and server/src/models/songCatalog.ts,
+-- which resolves a slug (e.g. "GFH2_1") to title/verses/audio at read time.
+CREATE TABLE IF NOT EXISTS resources (
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id       INT UNSIGNED NULL,
+  group_id      VARCHAR(50)  NULL,
+  sort_order    SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  song_slug     VARCHAR(50)  NOT NULL,
+  created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_resources_user (user_id, sort_order),
+  INDEX idx_resources_group (group_id, sort_order),
+  CONSTRAINT chk_resources_one_target CHECK (
+    (user_id IS NULL) <> (group_id IS NULL)
+  ),
+  CONSTRAINT fk_resources_user FOREIGN KEY (user_id)
+    REFERENCES users (id) ON DELETE CASCADE,
+  CONSTRAINT fk_resources_group FOREIGN KEY (group_id)
+    REFERENCES church_groups (name) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -51,6 +51,8 @@ authRouter.post('/register', async (req, res) => {
       id: user.id,
       username: user.username,
       displayName: user.displayName,
+      groupId: user.groupId,
+      role: user.role,
       defaultFontSize: user.defaultFontSize,
     },
   })
@@ -87,6 +89,8 @@ authRouter.post('/login', async (req, res) => {
       id: user.id,
       username: user.username,
       displayName: user.displayName,
+      groupId: user.groupId,
+      role: user.role,
       defaultFontSize: user.defaultFontSize,
     },
   })

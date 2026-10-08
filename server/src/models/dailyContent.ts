@@ -78,3 +78,73 @@ export async function findContentForUserByName(
   )
   return rows[0] ? toDailyContent(rows[0]) : null
 }
+
+// The admin editor (server/src/routes/adminContent.ts) edits one exact day at
+// a time — including future dates staged in advance — so these look up a
+// specific content_date instead of "most recent on or before today".
+export async function findContentForGroupOnDate(
+  groupId: string,
+  date: string,
+): Promise<DailyContent | null> {
+  const [rows] = await pool.query<DailyContentRow[]>(
+    `SELECT ${SELECT_COLUMNS} FROM daily_content WHERE group_id = ? AND content_date = ? LIMIT 1`,
+    [groupId, date],
+  )
+  return rows[0] ? toDailyContent(rows[0]) : null
+}
+
+export async function findContentForUserOnDate(
+  userId: number,
+  date: string,
+): Promise<DailyContent | null> {
+  const [rows] = await pool.query<DailyContentRow[]>(
+    `SELECT ${SELECT_COLUMNS} FROM daily_content WHERE user_id = ? AND content_date = ? LIMIT 1`,
+    [userId, date],
+  )
+  return rows[0] ? toDailyContent(rows[0]) : null
+}
+
+export type ContentFields = {
+  passage: string
+  song: string | null
+  songUrl: string | null
+  supplementary: string | null
+}
+
+// Relies on daily_content's uq_daily_content_group_date unique key to upsert:
+// a second save for the same group+date updates the existing row in place.
+export async function upsertContentForGroup(
+  groupId: string,
+  date: string,
+  fields: ContentFields,
+): Promise<void> {
+  await pool.query(
+    `INSERT INTO daily_content (group_id, content_date, passage, song, song_url, supplementary)
+     VALUES (?, ?, ?, ?, ?, ?)
+     ON DUPLICATE KEY UPDATE
+       passage = VALUES(passage),
+       song = VALUES(song),
+       song_url = VALUES(song_url),
+       supplementary = VALUES(supplementary)`,
+    [groupId, date, fields.passage, fields.song, fields.songUrl, fields.supplementary],
+  )
+}
+
+// Relies on daily_content's uq_daily_content_user_date unique key; see
+// upsertContentForGroup.
+export async function upsertContentForUser(
+  userId: number,
+  date: string,
+  fields: ContentFields,
+): Promise<void> {
+  await pool.query(
+    `INSERT INTO daily_content (user_id, content_date, passage, song, song_url, supplementary)
+     VALUES (?, ?, ?, ?, ?, ?)
+     ON DUPLICATE KEY UPDATE
+       passage = VALUES(passage),
+       song = VALUES(song),
+       song_url = VALUES(song_url),
+       supplementary = VALUES(supplementary)`,
+    [userId, date, fields.passage, fields.song, fields.songUrl, fields.supplementary],
+  )
+}

@@ -1,8 +1,10 @@
 import cors from 'cors'
 import express from 'express'
 import { env } from './env.js'
+import { adminContentRouter } from './routes/adminContent.js'
 import { authRouter } from './routes/auth.js'
 import { contentRouter } from './routes/content.js'
+import { resourcesRouter } from './routes/resources.js'
 import { usersRouter } from './routes/users.js'
 
 const ALLOWED_ORIGINS = [
@@ -26,6 +28,8 @@ async function main() {
   app.use(express.json())
   app.use('/api/auth', authRouter)
   app.use('/api/content', contentRouter)
+  app.use('/api/admin/content', adminContentRouter)
+  app.use('/api/resources', resourcesRouter)
   app.use('/api/users', usersRouter)
 
   app.listen(env.port, () => {

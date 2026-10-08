@@ -1,11 +1,15 @@
 import type { ResultSetHeader, RowDataPacket } from 'mysql2'
 import { pool } from '../db/pool.js'
 
+export type UserRole = 'user' | 'groupadmin' | 'appadmin'
+
 export type User = {
   id: number
   username: string
   passwordHash: string
   displayName: string
+  groupId: string
+  role: UserRole
   defaultFontSize: number
   createdAt: string
   lastLoginAt: string | null
@@ -16,13 +20,15 @@ type UserRow = RowDataPacket & {
   username: string
   password_hash: string
   display_name: string
+  group_id: string
+  user_role: UserRole
   default_font_size: number
   created_at: string
   last_login_at: string | null
 }
 
 const SELECT_COLUMNS =
-  'id, username, password_hash, display_name, default_font_size, created_at, last_login_at'
+  'id, username, password_hash, display_name, group_id, user_role, default_font_size, created_at, last_login_at'
 
 function toUser(row: UserRow): User {
   return {
@@ -30,6 +36,8 @@ function toUser(row: UserRow): User {
     username: row.username,
     passwordHash: row.password_hash,
     displayName: row.display_name,
+    groupId: row.group_id,
+    role: row.user_role,
     defaultFontSize: row.default_font_size,
     createdAt: row.created_at,
     lastLoginAt: row.last_login_at,

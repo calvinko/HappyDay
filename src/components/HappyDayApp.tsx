@@ -2,12 +2,18 @@ import { useEffect, useState, type ReactNode } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkBreaks from 'remark-breaks'
 import {
+  fetchAdminContent,
   fetchGroupContent,
+  fetchGroupResources,
   fetchUserContent,
-  fetchUserFontSize,
+  fetchUserProfile,
+  fetchUserResources,
   loginOrRegister,
+  saveAdminContent,
   saveUserFontSize,
+  type AdminTarget,
   type DailyContent,
+  type UserRole,
 } from '../lib/api'
 import {
   BUILTIN_GROUPS,
@@ -45,6 +51,12 @@ function parseSongTitle(song: string): { title: string; body: string } {
   return { title: trimmedFirst.slice(2).trim(), body: rest.join('\n').trim() }
 }
 
+// Server-backed resources have a stable numeric id; the static/legacy
+// single-song fallback doesn't, so its hymn number stands in as the key.
+function hymnKey(h: Hymn): string | number {
+  return h.id ?? h.no
+}
+
 function timeOfDayGreeting(): string {
   const hour = new Date().getHours()
   if (hour < 12) return 'Good morning'
@@ -52,7 +64,16 @@ function timeOfDayGreeting(): string {
   return 'Good evening'
 }
 
-type Screen = 'home' | 'passage' | 'resources' | 'hymn' | 'profile'
+// Local calendar date (not UTC — Date#toISOString would roll over a day early
+// or late depending on timezone), formatted for a native <input type="date">.
+function todayISODate(): string {
+  const d = new Date()
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  return `${d.getFullYear()}-${mm}-${dd}`
+}
+
+type Screen = 'home' | 'passage' | 'resources' | 'hymn' | 'profile' | 'admin'
 
 export type Group = { id: string; label: string }
 
@@ -146,6 +167,14 @@ function writeAuth(userId: number | null, token: string) {
   }
 }
 
+function readToken(): string {
+  try {
+    return localStorage.getItem(TOKEN_KEY) ?? ''
+  } catch {
+    return ''
+  }
+}
+
 function HappyDayApp({
   navModel = 'tabs',
   groups = DEFAULT_GROUPS,
@@ -155,12 +184,15 @@ function HappyDayApp({
   )
   const [read, setRead] = useState(false)
   const [size, setSize] = useState(20)
-  const [selectedHymnNo, setSelectedHymnNo] = useState<string | null>(null)
+  const [selectedHymnKey, setSelectedHymnKey] = useState<string | number | null>(
+    null,
+  )
   const [hymnFrom, setHymnFrom] = useState<'home' | 'resources'>('resources')
   const [reminder, setReminder] = useState(true)
   const [name, setName] = useState(() => readName())
   const [group, setGroup] = useState(() => readGroup())
   const [userId, setUserId] = useState(() => readUserId())
+  const [role, setRole] = useState<UserRole>('user')
   const [draft, setDraft] = useState('')
   const [draftGroup, setDraftGroup] = useState('')
   const [draftCode, setDraftCode] = useState('')
@@ -172,17 +204,38 @@ function HappyDayApp({
     'code',
   )
 
+  const [adminTargetType, setAdminTargetType] = useState<'group' | 'user'>('group')
+  const [adminGroupId, setAdminGroupId] = useState('')
+  const [adminUserId, setAdminUserId] = useState('')
+  const [adminDate, setAdminDate] = useState(() => todayISODate())
+  const [adminPassage, setAdminPassage] = useState('')
+  const [adminSong, setAdminSong] = useState('')
+  const [adminSongUrl, setAdminSongUrl] = useState('')
+  const [adminSupplementary, setAdminSupplementary] = useState('')
+  const [adminStatus, setAdminStatus] = useState<
+    'idle' | 'saving' | 'saved' | 'error'
+  >('idle')
+  const [adminError, setAdminError] = useState('')
+
   const [remoteContent, setRemoteContent] = useState<{
     name: string
     group: string
     data: DailyContent | null
   } | null>(null)
 
+  const [remoteResources, setRemoteResources] = useState<{
+    name: string
+    group: string
+    data: Hymn[]
+  } | null>(null)
+
   useEffect(() => {
     if (!userId) return
     let cancelled = false
-    fetchUserFontSize(userId).then((fontSize) => {
-      if (!cancelled && Number.isFinite(fontSize)) setSize(fontSize as number)
+    fetchUserProfile(userId).then((profile) => {
+      if (cancelled || !profile) return
+      if (Number.isFinite(profile.defaultFontSize)) setSize(profile.defaultFontSize)
+      setRole(profile.role)
     })
     return () => {
       cancelled = true
@@ -206,10 +259,84 @@ function HappyDayApp({
     }
   }, [name, group, userId])
 
+  useEffect(() => {
+    if (!group) return
+    let cancelled = false
+    // Resources are a standing per-user/per-group list, not date-scoped like
+    // daily_content, so they're fetched independently (see
+    // fetchUserResources/fetchGroupResources).
+    const userResources = userId ? fetchUserResources(userId) : Promise.resolve([])
+    userResources
+      .catch(() => [])
+      .then((data) => (data.length ? data : fetchGroupResources(group).catch(() => [])))
+      .then((data) => {
+        if (!cancelled) setRemoteResources({ name, group, data })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [name, group, userId])
+
+  useEffect(() => {
+    if (screen !== 'admin') return
+    const target: AdminTarget =
+      role === 'groupadmin'
+        ? { type: 'group', id: group }
+        : adminTargetType === 'group'
+          ? { type: 'group', id: adminGroupId }
+          : { type: 'user', id: Number(adminUserId) }
+    const ready =
+      target.type === 'group' ? target.id !== '' : Number.isInteger(target.id) && target.id > 0
+    if (!ready) return
+
+    let cancelled = false
+    fetchAdminContent(readToken(), target, adminDate)
+      .then((data) => {
+        if (cancelled) return
+        setAdminError('')
+        setAdminPassage(data?.passage ?? '')
+        setAdminSong(data?.song ?? '')
+        setAdminSongUrl(data?.songUrl ?? '')
+        setAdminSupplementary(data?.supplementary ?? '')
+        setAdminStatus('idle')
+      })
+      .catch((err: unknown) => {
+        if (cancelled) return
+        setAdminError(err instanceof Error ? err.message : 'Failed to load content')
+        setAdminStatus('error')
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [screen, role, group, adminTargetType, adminGroupId, adminUserId, adminDate])
+
+  const saveAdminForm = async () => {
+    if (!adminTargetReady || !adminPassage.trim()) return
+    setAdminStatus('saving')
+    setAdminError('')
+    try {
+      await saveAdminContent(readToken(), adminTarget, adminDate, {
+        passage: adminPassage.trim(),
+        song: adminSong.trim() ? adminSong.trim() : null,
+        songUrl: adminSongUrl.trim() ? adminSongUrl.trim() : null,
+        supplementary: adminSupplementary.trim() ? adminSupplementary.trim() : null,
+      })
+      setAdminStatus('saved')
+    } catch (err) {
+      setAdminError(err instanceof Error ? err.message : 'Failed to save content')
+      setAdminStatus('error')
+    }
+  }
+
   const fetchedContent =
     remoteContent?.name === name && remoteContent?.group === group
       ? remoteContent.data
       : null
+
+  const fetchedResources =
+    remoteResources?.name === name && remoteResources?.group === group
+      ? remoteResources.data
+      : []
 
   // Prefers the server's content for today; falls back to the static
   // GROUP_CONTENT placeholder on a fetch error or when nothing's assigned yet,
@@ -223,17 +350,23 @@ function HappyDayApp({
       }
     : GROUP_CONTENT[group]
   const song = groupContent ? parseSongTitle(groupContent.song) : null
-  const hymns: Hymn[] = groupContent && song
-    ? [
-        {
-          no: '—',
-          title: song.title,
-          meta: '',
-          verses: song.body ? [song.body] : [],
-          songUrl: groupContent.songUrl,
-        },
-      ]
-    : HYMNS
+  // The resources table (see server/sql/schema.sql) is a real, standing list
+  // of hymns per user/group; daily_content's single song/songUrl columns only
+  // fit one, so they're synthesized into a one-item list as a fallback when
+  // no resources are assigned.
+  const hymns: Hymn[] = fetchedResources.length
+    ? fetchedResources
+    : groupContent && song
+      ? [
+          {
+            no: '—',
+            title: song.title,
+            meta: '',
+            verses: song.body ? [song.body] : [],
+            songUrl: groupContent.songUrl,
+          },
+        ]
+      : HYMNS
   const content = groupContent ?? {
     passage: TODAY.passageRef,
     song: hymns[0].title,
@@ -241,12 +374,25 @@ function HappyDayApp({
   }
   const signedIn = name !== ''
   const firstName = name.split(' ')[0]
-  const chrome = screen !== 'passage' && screen !== 'hymn'
+  const chrome = screen !== 'passage' && screen !== 'hymn' && screen !== 'admin'
+  const isAdmin = role === 'groupadmin' || role === 'appadmin'
+  // groupadmin is locked to their own group; appadmin can target either a
+  // group or a specific user (see server/src/routes/adminContent.ts).
+  const adminTarget: AdminTarget =
+    role === 'groupadmin'
+      ? { type: 'group', id: group }
+      : adminTargetType === 'group'
+        ? { type: 'group', id: adminGroupId }
+        : { type: 'user', id: Number(adminUserId) }
+  const adminTargetReady =
+    adminTarget.type === 'group'
+      ? adminTarget.id !== ''
+      : Number.isInteger(adminTarget.id) && adminTarget.id > 0
   const selectedHymn =
-    hymns.find((h) => h.no === selectedHymnNo) ?? hymns[0]
+    hymns.find((h) => hymnKey(h) === selectedHymnKey) ?? hymns[0]
 
-  const openHymn = (no: string, from: 'home' | 'resources') => {
-    setSelectedHymnNo(no)
+  const openHymn = (h: Hymn, from: 'home' | 'resources') => {
+    setSelectedHymnKey(hymnKey(h))
     setHymnFrom(from)
     setScreen('hymn')
   }
@@ -291,6 +437,7 @@ function HappyDayApp({
       writeGroup(draftGroup)
       setUserId(auth.user.id)
       writeAuth(auth.user.id, auth.token)
+      setRole(auth.user.role)
       if (Number.isFinite(auth.user.defaultFontSize)) {
         setSize(auth.user.defaultFontSize)
       }
@@ -312,6 +459,7 @@ function HappyDayApp({
     writeName('')
     setUserId(null)
     writeAuth(null, '')
+    setRole('user')
     setDraftGroup('')
     setDraftCode('')
     setCodeError(false)
@@ -416,7 +564,7 @@ function HappyDayApp({
             <section className="px-[18px] pt-5 pb-2">
               <div className={`${KICKER} mb-3.5`}>TODAY&rsquo;S HYMNS</div>
               {hymns.map((h) => (
-                <div key={h.no} className="border-t border-ink/40 py-3.5">
+                <div key={hymnKey(h)} className="border-t border-ink/40 py-3.5">
                   <div className="flex items-center gap-3.5">
                     <span className="min-w-[54px] text-[26px] font-extrabold text-ash-400">
                       {h.no}
@@ -511,7 +659,7 @@ function HappyDayApp({
               </button>
               <button
                 type="button"
-                onClick={() => openHymn(hymns[0].no, 'home')}
+                onClick={() => openHymn(hymns[0], 'home')}
                 className="mt-5 flex w-full items-center gap-2.5 border-t border-ink/40 pt-3.5 text-left text-sm font-bold"
               >
                 <span className="flex-1">
@@ -533,9 +681,9 @@ function HappyDayApp({
             </p>
             {hymns.map((h) => (
               <button
-                key={h.no}
+                key={hymnKey(h)}
                 type="button"
-                onClick={() => openHymn(h.no, 'resources')}
+                onClick={() => openHymn(h, 'resources')}
                 className="flex w-full items-center gap-3.5 border-t-2 border-ink py-4 text-left hover:bg-surface"
               >
                 <span className="min-w-[58px] text-3xl font-extrabold text-accent">
@@ -894,6 +1042,23 @@ function HappyDayApp({
                   <span className="block h-[18px] w-[18px] bg-ink" />
                 </span>
               </button>
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (role === 'appadmin' && !adminGroupId) {
+                      setAdminGroupId(groups[0]?.id ?? '')
+                    }
+                    setAdminStatus('idle')
+                    setAdminError('')
+                    setScreen('admin')
+                  }}
+                  className="mt-1.5 flex w-full items-center gap-2.5 border-2 border-ink px-4 py-3 text-left text-[15px] font-bold tracking-wide hover:bg-surface"
+                >
+                  <span className="flex-1">Edit daily content</span>
+                  <span className="text-accent-700">&rarr;</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={signOut}
@@ -903,6 +1068,179 @@ function HappyDayApp({
                 <span className="text-accent-700">&rarr;</span>
               </button>
             </div>
+          </div>
+        )}
+
+        {screen === 'admin' && (
+          <div className="animate-hd-in">
+            <header className="sticky top-0 z-10 flex items-center gap-3 border-b-2 border-ink bg-ground px-[18px] py-3">
+              <button
+                type="button"
+                onClick={() => setScreen('profile')}
+                className="text-xl leading-none"
+              >
+                &larr;
+              </button>
+              <span className="flex-1 text-[15px] font-bold">
+                Edit daily content
+              </span>
+            </header>
+            <form
+              className="px-[18px] pt-5 pb-7"
+              onSubmit={(e) => {
+                e.preventDefault()
+                void saveAdminForm()
+              }}
+            >
+              {role === 'groupadmin' ? (
+                <p className="mb-5 text-[13px] font-medium text-ash-700">
+                  Editing content for <strong>{labelForGroup(group)}</strong>
+                </p>
+              ) : (
+                <div className="mb-5 flex flex-col gap-3">
+                  <div className="flex border-2 border-ink">
+                    {(['group', 'user'] as const).map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setAdminTargetType(t)}
+                        className={`flex-1 py-2.5 text-[13px] font-bold tracking-[0.08em] uppercase ${
+                          adminTargetType === t
+                            ? 'bg-accent text-white'
+                            : 'bg-transparent text-ink hover:bg-surface'
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                  {adminTargetType === 'group' ? (
+                    <select
+                      value={adminGroupId}
+                      onChange={(e) => setAdminGroupId(e.target.value)}
+                      className="w-full border-2 border-ink bg-transparent px-3.5 py-3 text-[15px] font-bold"
+                    >
+                      <option value="" disabled>
+                        Select a group
+                      </option>
+                      {groups.map((g) => (
+                        <option key={g.id} value={g.id}>
+                          {g.label}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={adminUserId}
+                      onChange={(e) => setAdminUserId(e.target.value)}
+                      placeholder="User ID"
+                      className="w-full border-2 border-ink bg-transparent px-3.5 py-3 text-[15px] font-bold placeholder:font-medium placeholder:text-ash-400"
+                    />
+                  )}
+                </div>
+              )}
+
+              <label
+                htmlFor="hd-admin-date"
+                className="block text-[11px] font-bold tracking-[0.12em] text-ash-700"
+              >
+                DATE
+              </label>
+              <input
+                id="hd-admin-date"
+                type="date"
+                value={adminDate}
+                onChange={(e) => setAdminDate(e.target.value)}
+                className="mt-2 mb-5 w-full border-2 border-ink bg-transparent px-3.5 py-3 text-[15px] font-bold"
+              />
+
+              <label
+                htmlFor="hd-admin-passage"
+                className="block text-[11px] font-bold tracking-[0.12em] text-ash-700"
+              >
+                BIBLE PASSAGE
+              </label>
+              <textarea
+                id="hd-admin-passage"
+                value={adminPassage}
+                onChange={(e) => setAdminPassage(e.target.value)}
+                rows={5}
+                placeholder="Psalm 103:1–14"
+                required
+                className="mt-2 mb-5 w-full resize-y border-2 border-ink bg-transparent px-3.5 py-3 text-[15px] leading-relaxed placeholder:text-ash-400"
+              />
+
+              <label
+                htmlFor="hd-admin-song"
+                className="block text-[11px] font-bold tracking-[0.12em] text-ash-700"
+              >
+                SONG
+              </label>
+              <textarea
+                id="hd-admin-song"
+                value={adminSong}
+                onChange={(e) => setAdminSong(e.target.value)}
+                rows={5}
+                placeholder={'T:Hymn title\nLyrics…'}
+                className="mt-2 mb-5 w-full resize-y border-2 border-ink bg-transparent px-3.5 py-3 text-[15px] leading-relaxed placeholder:text-ash-400"
+              />
+
+              <label
+                htmlFor="hd-admin-song-url"
+                className="block text-[11px] font-bold tracking-[0.12em] text-ash-700"
+              >
+                SONG AUDIO URL
+              </label>
+              <input
+                id="hd-admin-song-url"
+                type="text"
+                value={adminSongUrl}
+                onChange={(e) => setAdminSongUrl(e.target.value)}
+                placeholder="https://…"
+                className="mt-2 mb-5 w-full border-2 border-ink bg-transparent px-3.5 py-3 text-[15px] placeholder:text-ash-400"
+              />
+
+              <label
+                htmlFor="hd-admin-supplementary"
+                className="block text-[11px] font-bold tracking-[0.12em] text-ash-700"
+              >
+                SUPPLEMENTARY NOTES
+              </label>
+              <textarea
+                id="hd-admin-supplementary"
+                value={adminSupplementary}
+                onChange={(e) => setAdminSupplementary(e.target.value)}
+                rows={3}
+                className="mt-2 mb-5 w-full resize-y border-2 border-ink bg-transparent px-3.5 py-3 text-[15px] leading-relaxed"
+              />
+
+              {adminStatus === 'error' && (
+                <p className="mb-3.5 text-[13px] font-bold text-accent-700">
+                  {adminError}
+                </p>
+              )}
+              {adminStatus === 'saved' && (
+                <p className="mb-3.5 text-[13px] font-bold text-accent-700">
+                  Saved.
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={
+                  !adminTargetReady ||
+                  adminPassage.trim() === '' ||
+                  adminStatus === 'saving'
+                }
+                className="flex w-full items-center gap-2.5 border-2 border-accent bg-accent px-4 py-[13px] text-left text-[15px] font-bold tracking-wide text-white hover:border-accent-600 hover:bg-accent-600 active:border-accent-700 active:bg-accent-700 disabled:cursor-not-allowed disabled:border-ash-400 disabled:bg-transparent disabled:text-ash-500"
+              >
+                <span className="flex-1">
+                  {adminStatus === 'saving' ? 'Saving…' : 'Save content'}
+                </span>
+              </button>
+            </form>
           </div>
         )}
       </div>

@@ -24,6 +24,8 @@ usersRouter.get('/:userId', async (req, res) => {
     id: user.id,
     username: user.username,
     displayName: user.displayName,
+    groupId: user.groupId,
+    role: user.role,
     defaultFontSize: user.defaultFontSize,
   })
 })

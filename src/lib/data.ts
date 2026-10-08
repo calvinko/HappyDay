@@ -16,6 +16,7 @@ export const VERSES: string[] = [
 ]
 
 export type Hymn = {
+  id?: number
   no: string
   title: string
   meta: string
