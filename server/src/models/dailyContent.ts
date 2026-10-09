@@ -104,6 +104,34 @@ export async function findContentForUserOnDate(
   return rows[0] ? toDailyContent(rows[0]) : null
 }
 
+// Content staged for today or later, soonest first, for the admin editor's
+// "upcoming" list. DATE_FORMAT keeps content_date a plain YYYY-MM-DD string
+// instead of a JS Date that would shift with the server's timezone.
+const UPCOMING_COLUMNS = SELECT_COLUMNS.replace(
+  'content_date',
+  "DATE_FORMAT(content_date, '%Y-%m-%d') AS content_date",
+)
+
+export async function findUpcomingContentForGroup(
+  groupId: string,
+): Promise<DailyContent[]> {
+  const [rows] = await pool.query<DailyContentRow[]>(
+    `SELECT ${UPCOMING_COLUMNS} FROM daily_content WHERE group_id = ? AND content_date >= CURDATE() ORDER BY content_date ASC LIMIT 90`,
+    [groupId],
+  )
+  return rows.map(toDailyContent)
+}
+
+export async function findUpcomingContentForUser(
+  userId: number,
+): Promise<DailyContent[]> {
+  const [rows] = await pool.query<DailyContentRow[]>(
+    `SELECT ${UPCOMING_COLUMNS} FROM daily_content WHERE user_id = ? AND content_date >= CURDATE() ORDER BY content_date ASC LIMIT 90`,
+    [userId],
+  )
+  return rows.map(toDailyContent)
+}
+
 export type ContentFields = {
   passage: string
   song: string | null

@@ -164,6 +164,22 @@ export async function fetchAdminContent(
   return (await res.json()) as DailyContent | null
 }
 
+// GET /api/admin/content/upcoming — content staged for today or later, soonest first.
+export async function fetchUpcomingAdminContent(
+  token: string,
+  target: AdminTarget,
+): Promise<DailyContent[]> {
+  const res = await fetch(
+    `${API_BASE}/api/admin/content/upcoming?${adminTargetParams(target)}`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  )
+  if (!res.ok) {
+    const body = await res.json().catch(() => null)
+    throw new Error(body?.error ?? `Request failed: ${res.status}`)
+  }
+  return (await res.json()) as DailyContent[]
+}
+
 // PUT /api/admin/content — upserts a day's content for a group or user.
 export async function saveAdminContent(
   token: string,

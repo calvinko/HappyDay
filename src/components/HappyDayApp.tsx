@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkBreaks from 'remark-breaks'
 import {
   fetchAdminContent,
+  fetchUpcomingAdminContent,
   fetchGroupContent,
   fetchGroupResources,
   fetchUserContent,
@@ -208,6 +209,7 @@ function HappyDayApp({
   const [adminGroupId, setAdminGroupId] = useState('')
   const [adminUserId, setAdminUserId] = useState('')
   const [adminDate, setAdminDate] = useState(() => todayISODate())
+  const [upcoming, setUpcoming] = useState<DailyContent[]>([])
   const [adminPassage, setAdminPassage] = useState('')
   const [adminSong, setAdminSong] = useState('')
   const [adminSongUrl, setAdminSongUrl] = useState('')
@@ -309,6 +311,33 @@ function HappyDayApp({
       cancelled = true
     }
   }, [screen, role, group, adminTargetType, adminGroupId, adminUserId, adminDate])
+
+  // Staged content for today and later, refreshed when the target changes or
+  // after a save.
+  const savedTick = adminStatus === 'saved'
+  useEffect(() => {
+    if (screen !== 'admin') return
+    const target: AdminTarget =
+      role === 'groupadmin'
+        ? { type: 'group', id: group }
+        : adminTargetType === 'group'
+          ? { type: 'group', id: adminGroupId }
+          : { type: 'user', id: Number(adminUserId) }
+    const ready =
+      target.type === 'group' ? target.id !== '' : Number.isInteger(target.id) && target.id > 0
+    if (!ready) return
+    let cancelled = false
+    fetchUpcomingAdminContent(readToken(), target)
+      .then((items) => {
+        if (!cancelled) setUpcoming(items)
+      })
+      .catch(() => {
+        if (!cancelled) setUpcoming([])
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [screen, role, group, adminTargetType, adminGroupId, adminUserId, savedTick])
 
   const saveAdminForm = async () => {
     if (!adminTargetReady || !adminPassage.trim()) return
@@ -1240,6 +1269,45 @@ function HappyDayApp({
                   {adminStatus === 'saving' ? 'Saving…' : 'Save content'}
                 </span>
               </button>
+
+              <div className="mt-7">
+                <div className="text-[11px] font-bold tracking-[0.12em] text-ash-700">
+                  UPCOMING
+                </div>
+                {!adminTargetReady || upcoming.length === 0 ? (
+                  <p className="mt-2 text-[13px] font-medium text-ash-700">
+                    No content scheduled from today onward.
+                  </p>
+                ) : (
+                  <ul className="mt-2 flex flex-col gap-1.5">
+                    {upcoming.map((c) => (
+                      <li key={c.id}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAdminStatus('idle')
+                            setAdminDate(c.contentDate)
+                            window.scrollTo?.({ top: 0 })
+                          }}
+                          className={`flex w-full items-center gap-3 border-2 border-ink px-3.5 py-2.5 text-left hover:bg-surface ${
+                            c.contentDate === adminDate ? 'bg-surface' : ''
+                          }`}
+                        >
+                          <span className="text-[13px] font-bold tabular-nums">
+                            {c.contentDate}
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-[13px] text-ash-700">
+                            {c.passage}
+                          </span>
+                          <span className="text-[11px] font-bold tracking-[0.12em] text-accent-700">
+                            EDIT
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </form>
           </div>
         )}

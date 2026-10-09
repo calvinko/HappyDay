@@ -3,6 +3,8 @@ import { authenticate, requireAdmin } from '../middleware/auth.js'
 import {
   findContentForGroupOnDate,
   findContentForUserOnDate,
+  findUpcomingContentForGroup,
+  findUpcomingContentForUser,
   upsertContentForGroup,
   upsertContentForUser,
 } from '../models/dailyContent.js'
@@ -35,6 +37,27 @@ function authorizeTarget(req: Request, target: Target): string | null {
   }
   return null
 }
+
+// Registered before GET '/' only for readability; paths don't overlap.
+adminContentRouter.get('/upcoming', async (req, res) => {
+  const target = parseTarget(req.query.targetType, req.query.targetId)
+  if (!target) {
+    res.status(400).json({ error: 'targetType ("group"|"user") and targetId are required' })
+    return
+  }
+
+  const authError = authorizeTarget(req, target)
+  if (authError) {
+    res.status(403).json({ error: authError })
+    return
+  }
+
+  const items =
+    target.type === 'group'
+      ? await findUpcomingContentForGroup(target.id)
+      : await findUpcomingContentForUser(target.id)
+  res.json(items)
+})
 
 adminContentRouter.get('/', async (req, res) => {
   const { targetType, targetId, date } = req.query
