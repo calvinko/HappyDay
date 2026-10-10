@@ -615,9 +615,9 @@ function HappyDayApp({
             </section>
 
             <section className="px-[18px] pt-5 pb-2">
-              <div className={`${KICKER} mb-3.5 today-hymn`}>TODAY&rsquo;S HYMNS</div>
+              <div className={`${KICKER} mb-3.5`}>TODAY&rsquo;S HYMNS</div>
               {hymns.map((h) => (
-                <div key={hymnKey(h)} className="border-t border-ink/40 py-3.5">
+                <div key={hymnKey(h)} className="border-t border-ink/40 py-3.5 today-hymn">
                   <div className="flex items-center gap-3.5">
                     <span className="min-w-[54px] text-[26px] font-extrabold text-ash-400">
                       {h.no}
