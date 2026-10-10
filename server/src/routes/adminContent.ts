@@ -3,6 +3,8 @@ import { authenticate, requireAdmin } from '../middleware/auth.js'
 import {
   findContentForGroupOnDate,
   findContentForUserOnDate,
+  findLatestContentForGroup,
+  findLatestContentForUser,
   findUpcomingContentForGroup,
   findUpcomingContentForUser,
   upsertContentForGroup,
@@ -57,6 +59,26 @@ adminContentRouter.get('/upcoming', async (req, res) => {
       ? await findUpcomingContentForGroup(target.id)
       : await findUpcomingContentForUser(target.id)
   res.json(items)
+})
+
+adminContentRouter.get('/latest', async (req, res) => {
+  const target = parseTarget(req.query.targetType, req.query.targetId)
+  if (!target) {
+    res.status(400).json({ error: 'targetType ("group"|"user") and targetId are required' })
+    return
+  }
+
+  const authError = authorizeTarget(req, target)
+  if (authError) {
+    res.status(403).json({ error: authError })
+    return
+  }
+
+  const content =
+    target.type === 'group'
+      ? await findLatestContentForGroup(target.id)
+      : await findLatestContentForUser(target.id)
+  res.json(content)
 })
 
 adminContentRouter.get('/', async (req, res) => {

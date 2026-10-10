@@ -3,6 +3,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkBreaks from 'remark-breaks'
 import {
   fetchAdminContent,
+  fetchLatestAdminContent,
   fetchUpcomingAdminContent,
   fetchGroupContent,
   fetchGroupResources,
@@ -72,6 +73,23 @@ function todayISODate(): string {
   const mm = String(d.getMonth() + 1).padStart(2, '0')
   const dd = String(d.getDate()).padStart(2, '0')
   return `${d.getFullYear()}-${mm}-${dd}`
+}
+
+// The admin editor stores a passage's title as a leading markdown "## Title"
+// line in daily_content.passage, so these convert between that single string
+// and the editor's separate title / text fields.
+const TITLE_HEADER = '## '
+
+function splitPassage(passage: string): { title: string; text: string } {
+  const m = passage.match(/^## ([^\n]*)(?:\n+|$)/)
+  return m
+    ? { title: m[1].trim(), text: passage.slice(m[0].length) }
+    : { title: '', text: passage }
+}
+
+function joinPassage(title: string, text: string): string {
+  const t = title.trim()
+  return t ? `${TITLE_HEADER}${t}\n\n${text.trim()}` : text.trim()
 }
 
 type Screen = 'home' | 'passage' | 'resources' | 'hymn' | 'profile' | 'admin'
@@ -210,6 +228,7 @@ function HappyDayApp({
   const [adminUserId, setAdminUserId] = useState('')
   const [adminDate, setAdminDate] = useState(() => todayISODate())
   const [upcoming, setUpcoming] = useState<DailyContent[]>([])
+  const [adminTitle, setAdminTitle] = useState('')
   const [adminPassage, setAdminPassage] = useState('')
   const [adminSong, setAdminSong] = useState('')
   const [adminSongUrl, setAdminSongUrl] = useState('')
@@ -292,13 +311,18 @@ function HappyDayApp({
     if (!ready) return
 
     let cancelled = false
-    fetchAdminContent(readToken(), target, adminDate)
-      .then((data) => {
+    const token = readToken()
+    // An empty day starts with the hymn from the most recently dated content.
+    fetchAdminContent(token, target, adminDate)
+      .then(async (data) => {
+        const hymnSource = data ?? (await fetchLatestAdminContent(token, target))
         if (cancelled) return
         setAdminError('')
-        setAdminPassage(data?.passage ?? '')
-        setAdminSong(data?.song ?? '')
-        setAdminSongUrl(data?.songUrl ?? '')
+        const parts = splitPassage(data?.passage ?? '')
+        setAdminTitle(parts.title)
+        setAdminPassage(parts.text)
+        setAdminSong(hymnSource?.song ?? '')
+        setAdminSongUrl(hymnSource?.songUrl ?? '')
         setAdminSupplementary(data?.supplementary ?? '')
         setAdminStatus('idle')
       })
@@ -345,7 +369,7 @@ function HappyDayApp({
     setAdminError('')
     try {
       await saveAdminContent(readToken(), adminTarget, adminDate, {
-        passage: adminPassage.trim(),
+        passage: joinPassage(adminTitle, adminPassage),
         song: adminSong.trim() ? adminSong.trim() : null,
         songUrl: adminSongUrl.trim() ? adminSongUrl.trim() : null,
         supplementary: adminSupplementary.trim() ? adminSupplementary.trim() : null,
@@ -1186,6 +1210,21 @@ function HappyDayApp({
               />
 
               <label
+                htmlFor="hd-admin-title"
+                className="block text-[11px] font-bold tracking-[0.12em] text-ash-700"
+              >
+                TITLE
+              </label>
+              <input
+                id="hd-admin-title"
+                type="text"
+                value={adminTitle}
+                onChange={(e) => setAdminTitle(e.target.value.replace(/\s*\n\s*/g, ' '))}
+                placeholder="Genesis 1:1–3"
+                className="mt-2 mb-5 w-full border-2 border-ink bg-transparent px-3.5 py-3 text-[15px] font-bold placeholder:font-medium placeholder:text-ash-400"
+              />
+
+              <label
                 htmlFor="hd-admin-passage"
                 className="block text-[11px] font-bold tracking-[0.12em] text-ash-700"
               >
@@ -1297,7 +1336,7 @@ function HappyDayApp({
                             {c.contentDate}
                           </span>
                           <span className="min-w-0 flex-1 truncate text-[13px] text-ash-700">
-                            {c.passage}
+                            {splitPassage(c.passage).title || c.passage}
                           </span>
                           <span className="text-[11px] font-bold tracking-[0.12em] text-accent-700">
                             EDIT

@@ -180,6 +180,23 @@ export async function fetchUpcomingAdminContent(
   return (await res.json()) as DailyContent[]
 }
 
+// GET /api/admin/content/latest — the target's most recently dated content
+// (any date), or null if it has none.
+export async function fetchLatestAdminContent(
+  token: string,
+  target: AdminTarget,
+): Promise<DailyContent | null> {
+  const res = await fetch(
+    `${API_BASE}/api/admin/content/latest?${adminTargetParams(target)}`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  )
+  if (!res.ok) {
+    const body = await res.json().catch(() => null)
+    throw new Error(body?.error ?? `Request failed: ${res.status}`)
+  }
+  return (await res.json()) as DailyContent | null
+}
+
 // PUT /api/admin/content — upserts a day's content for a group or user.
 export async function saveAdminContent(
   token: string,

@@ -132,6 +132,28 @@ export async function findUpcomingContentForUser(
   return rows.map(toDailyContent)
 }
 
+// The most recently dated row for a target, including future dates. The admin
+// editor uses it to pre-fill the hymn when adding content for an empty day.
+export async function findLatestContentForGroup(
+  groupId: string,
+): Promise<DailyContent | null> {
+  const [rows] = await pool.query<DailyContentRow[]>(
+    `SELECT ${UPCOMING_COLUMNS} FROM daily_content WHERE group_id = ? ORDER BY content_date DESC LIMIT 1`,
+    [groupId],
+  )
+  return rows[0] ? toDailyContent(rows[0]) : null
+}
+
+export async function findLatestContentForUser(
+  userId: number,
+): Promise<DailyContent | null> {
+  const [rows] = await pool.query<DailyContentRow[]>(
+    `SELECT ${UPCOMING_COLUMNS} FROM daily_content WHERE user_id = ? ORDER BY content_date DESC LIMIT 1`,
+    [userId],
+  )
+  return rows[0] ? toDailyContent(rows[0]) : null
+}
+
 export type ContentFields = {
   passage: string
   song: string | null
