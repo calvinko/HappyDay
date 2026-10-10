@@ -121,3 +121,9 @@ button {
 ::selection {
   background: var(--color-accent-300);
 }
+
+.today-hymn ol {
+  list-style:decimal;
+  list-style-position: inside;
+  padding-left: 0;  
+}
