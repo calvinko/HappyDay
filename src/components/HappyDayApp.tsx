@@ -1,23 +1,19 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkBreaks from 'remark-breaks'
+import { DEFAULT_RESOURCES } from '../lib/defaultResources'
 import {
   fetchAdminContent,
   fetchLatestAdminContent,
   fetchUpcomingAdminContent,
   fetchGroupContent,
-  fetchGroupResources,
   fetchUserContent,
   fetchUserProfile,
-  fetchUserResources,
   loginOrRegister,
   saveAdminContent,
   saveUserFontSize,
   type AdminTarget,
-  EMPTY_RESOURCES,
-  isEmptyResources,
   type DailyContent,
-  type Resources,
   type UserRole,
 } from '../lib/api'
 import {
@@ -246,12 +242,6 @@ function HappyDayApp({
     data: DailyContent | null
   } | null>(null)
 
-  const [remoteResources, setRemoteResources] = useState<{
-    name: string
-    group: string
-    data: Resources
-  } | null>(null)
-
   useEffect(() => {
     if (!userId) return
     let cancelled = false
@@ -276,32 +266,6 @@ function HappyDayApp({
       .then((data) => data ?? fetchGroupContent(group).catch(() => null))
       .then((data) => {
         if (!cancelled) setRemoteContent({ name, group, data })
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [name, group, userId])
-
-  useEffect(() => {
-    if (!group) return
-    let cancelled = false
-    // Resources are a standing per-user/per-group list, not date-scoped like
-    // daily_content, so they're fetched independently (see
-    // fetchUserResources/fetchGroupResources).
-    // A user's own resources fully replace their group's (across all three
-    // sections), so the group is only consulted when the user has none.
-    const userResources = userId
-      ? fetchUserResources(userId)
-      : Promise.resolve(EMPTY_RESOURCES)
-    userResources
-      .catch(() => EMPTY_RESOURCES)
-      .then((data) =>
-        isEmptyResources(data)
-          ? fetchGroupResources(group).catch(() => EMPTY_RESOURCES)
-          : data,
-      )
-      .then((data) => {
-        if (!cancelled) setRemoteResources({ name, group, data })
       })
     return () => {
       cancelled = true
@@ -396,10 +360,9 @@ function HappyDayApp({
       ? remoteContent.data
       : null
 
-  const fetchedResources =
-    remoteResources?.name === name && remoteResources?.group === group
-      ? remoteResources.data
-      : EMPTY_RESOURCES
+  // Temporarily not fetched from the server: the Resources page uses the
+  // built-in default rows (see src/lib/defaultResources.ts).
+  const fetchedResources = DEFAULT_RESOURCES
 
   // Prefers the server's content for today; falls back to the static
   // GROUP_CONTENT placeholder on a fetch error or when nothing's assigned yet,
@@ -412,10 +375,7 @@ function HappyDayApp({
         supplementary: fetchedContent.supplementary,
       }
     : GROUP_CONTENT[group]
-  // The server supplies default songs when a group has no resources of its
-  // own (DEFAULT_RESOURCE_ROWS in server/src/models/resource.ts). The client
-  // has no song catalog, so this is empty only while loading or if the
-  // server is unreachable.
+  // Songs for the Resources page (and the home fallback below).
   const hymns: Hymn[] = fetchedResources.songs
   // The home screen's "Today's hymns" come from today's daily content (its
   // single song/songUrl), falling back to the resource songs when none is set.

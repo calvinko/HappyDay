@@ -3,8 +3,16 @@ import { findResourcesForGroup, findResourcesForUser } from '../models/resource.
 
 export const resourcesRouter = Router()
 
+// Express 4 doesn't catch rejections from async handlers, so a failed query
+// (e.g. a database that hasn't had sql/migrations applied) would leave the
+// request hanging forever. Answer with a 500 instead.
 resourcesRouter.get('/group/:groupId', async (req, res) => {
-  res.json(await findResourcesForGroup(req.params.groupId))
+  try {
+    res.json(await findResourcesForGroup(req.params.groupId))
+  } catch (err) {
+    console.error('GET /api/resources/group failed:', err)
+    res.status(500).json({ error: 'failed to load resources' })
+  }
 })
 
 resourcesRouter.get('/user/:userId', async (req, res) => {
@@ -14,5 +22,10 @@ resourcesRouter.get('/user/:userId', async (req, res) => {
     return
   }
 
-  res.json(await findResourcesForUser(userId))
+  try {
+    res.json(await findResourcesForUser(userId))
+  } catch (err) {
+    console.error('GET /api/resources/user failed:', err)
+    res.status(500).json({ error: 'failed to load resources' })
+  }
 })
