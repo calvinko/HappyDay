@@ -755,9 +755,6 @@ function HappyDayApp({
                 onClick={() => openHymn(h, 'resources')}
                 className="flex w-full items-center gap-3.5 border-t-2 border-ink py-4 text-left hover:bg-surface"
               >
-                <span className="min-w-[58px] text-3xl font-extrabold text-accent">
-                  {h.no}
-                </span>
                 <span className="flex min-w-0 flex-1 flex-col gap-[3px]">
                   <span className="text-lg font-bold">{h.title}</span>
                   <span className="text-xs font-medium text-ash-700">
