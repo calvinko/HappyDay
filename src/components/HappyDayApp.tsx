@@ -14,7 +14,10 @@ import {
   saveAdminContent,
   saveUserFontSize,
   type AdminTarget,
+  EMPTY_RESOURCES,
+  isEmptyResources,
   type DailyContent,
+  type Resources,
   type UserRole,
 } from '../lib/api'
 import {
@@ -41,20 +44,8 @@ function Markdown({ children }: { children: string }) {
   )
 }
 
-// Song content may lead with a "T:<title>" line — if so, that's the hymn
-// title and the rest of the lines are the lyrics; otherwise the whole string
-// is lyrics with no separate title.
-function parseSongTitle(song: string): { title: string; body: string } {
-  const [firstLine, ...rest] = song.split('\n')
-  const trimmedFirst = firstLine?.trim() ?? ''
-  if (!trimmedFirst.startsWith('T:')) {
-    return { title: '', body: song }
-  }
-  return { title: trimmedFirst.slice(2).trim(), body: rest.join('\n').trim() }
-}
-
-// Server-backed resources have a stable numeric id; the static/legacy
-// single-song fallback doesn't, so its hymn number stands in as the key.
+// Server-backed resources have a stable numeric id; the static HYMNS
+// fallback doesn't, so its hymn number stands in as the key.
 function hymnKey(h: Hymn): string | number {
   return h.id ?? h.no
 }
@@ -247,7 +238,7 @@ function HappyDayApp({
   const [remoteResources, setRemoteResources] = useState<{
     name: string
     group: string
-    data: Hymn[]
+    data: Resources
   } | null>(null)
 
   useEffect(() => {
@@ -286,10 +277,18 @@ function HappyDayApp({
     // Resources are a standing per-user/per-group list, not date-scoped like
     // daily_content, so they're fetched independently (see
     // fetchUserResources/fetchGroupResources).
-    const userResources = userId ? fetchUserResources(userId) : Promise.resolve([])
+    // A user's own resources fully replace their group's (across all three
+    // sections), so the group is only consulted when the user has none.
+    const userResources = userId
+      ? fetchUserResources(userId)
+      : Promise.resolve(EMPTY_RESOURCES)
     userResources
-      .catch(() => [])
-      .then((data) => (data.length ? data : fetchGroupResources(group).catch(() => [])))
+      .catch(() => EMPTY_RESOURCES)
+      .then((data) =>
+        isEmptyResources(data)
+          ? fetchGroupResources(group).catch(() => EMPTY_RESOURCES)
+          : data,
+      )
       .then((data) => {
         if (!cancelled) setRemoteResources({ name, group, data })
       })
@@ -389,7 +388,7 @@ function HappyDayApp({
   const fetchedResources =
     remoteResources?.name === name && remoteResources?.group === group
       ? remoteResources.data
-      : []
+      : EMPTY_RESOURCES
 
   // Prefers the server's content for today; falls back to the static
   // GROUP_CONTENT placeholder on a fetch error or when nothing's assigned yet,
@@ -402,24 +401,12 @@ function HappyDayApp({
         supplementary: fetchedContent.supplementary,
       }
     : GROUP_CONTENT[group]
-  const song = groupContent ? parseSongTitle(groupContent.song) : null
-  // The resources table (see server/sql/schema.sql) is a real, standing list
-  // of hymns per user/group; daily_content's single song/songUrl columns only
-  // fit one, so they're synthesized into a one-item list as a fallback when
-  // no resources are assigned.
-  const hymns: Hymn[] = fetchedResources.length
-    ? fetchedResources
-    : groupContent && song
-      ? [
-          {
-            no: '—',
-            title: song.title,
-            meta: '',
-            verses: song.body ? [song.body] : [],
-            songUrl: groupContent.songUrl,
-          },
-        ]
-      : HYMNS
+  // The server supplies default songs when a group has no resources of its
+  // own (DEFAULT_RESOURCE_ROWS in server/src/models/resource.ts), so the
+  // static HYMNS only cover the server being unreachable.
+  const hymns: Hymn[] = fetchedResources.songs.length
+    ? fetchedResources.songs
+    : HYMNS
   const content = groupContent ?? {
     passage: TODAY.passageRef,
     song: hymns[0].title,
@@ -730,8 +717,49 @@ function HappyDayApp({
               Resources
             </h1>
             <p className="mb-5 text-[13px] font-medium text-ash-700">
-              Hymns designated for {TODAY.dateLong}
+              Designated for {TODAY.dateLong}
             </p>
+            {fetchedResources.messages.length > 0 && (
+              <h2 className="mb-2 text-xs font-bold tracking-widest text-ash-700">
+                MESSAGES
+              </h2>
+            )}
+            {fetchedResources.messages.map((m) => (
+              <div key={m.id} className="border-t-2 border-ink py-4">
+                <div className="mb-2 text-lg font-bold">{m.title}</div>
+                {m.type === 'audio' ? (
+                  <audio controls preload="none" src={m.url} className="w-full" />
+                ) : (
+                  <a
+                    href={m.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[15px] font-bold text-accent-700 underline"
+                  >
+                    Watch on YouTube &rarr;
+                  </a>
+                )}
+              </div>
+            ))}
+            {fetchedResources.texts.length > 0 && (
+              <h2 className="mt-6 mb-2 text-xs font-bold tracking-widest text-ash-700">
+                TEXTS
+              </h2>
+            )}
+            {fetchedResources.texts.map((t) => (
+              <div key={t.id} className="border-t-2 border-ink py-4">
+                <div className="mb-1.5 text-lg font-bold">{t.title}</div>
+                <p className="text-[15px] leading-relaxed whitespace-pre-wrap">
+                  {t.body}
+                </p>
+              </div>
+            ))}
+            {(fetchedResources.messages.length > 0 ||
+              fetchedResources.texts.length > 0) && (
+              <h2 className="mt-6 mb-2 text-xs font-bold tracking-widest text-ash-700">
+                HYMNS
+              </h2>
+            )}
             {hymns.map((h) => (
               <button
                 key={hymnKey(h)}

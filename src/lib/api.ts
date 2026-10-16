@@ -34,20 +34,46 @@ export function fetchUserContent(userId: number): Promise<DailyContent | null> {
   return getContent(`${API_BASE}/api/content/user/${userId}`)
 }
 
-async function getResources(url: string): Promise<Hymn[]> {
+export type ResourceMessage = {
+  id: number
+  title: string
+  url: string
+  type: 'audio' | 'youtube'
+}
+
+export type ResourceText = {
+  id: number
+  title: string
+  body: string
+}
+
+export type Resources = {
+  songs: Hymn[]
+  messages: ResourceMessage[]
+  texts: ResourceText[]
+}
+
+export const EMPTY_RESOURCES: Resources = { songs: [], messages: [], texts: [] }
+
+export function isEmptyResources(r: Resources): boolean {
+  return !r.songs.length && !r.messages.length && !r.texts.length
+}
+
+async function getResources(url: string): Promise<Resources> {
   const res = await fetch(url)
-  if (!res.ok) return []
-  return (await res.json()) as Hymn[]
+  if (!res.ok) return EMPTY_RESOURCES
+  return (await res.json()) as Resources
 }
 
 // GET /api/resources/group/:groupId — see server/src/routes/resources.ts.
-// A group's standing hymn list (not date-scoped, unlike daily content).
-export function fetchGroupResources(groupId: string): Promise<Hymn[]> {
+// A group's standing songs, messages and preset texts (not date-scoped,
+// unlike daily content).
+export function fetchGroupResources(groupId: string): Promise<Resources> {
   return getResources(`${API_BASE}/api/resources/group/${encodeURIComponent(groupId)}`)
 }
 
 // GET /api/resources/user/:userId — see server/src/routes/resources.ts.
-export function fetchUserResources(userId: number): Promise<Hymn[]> {
+export function fetchUserResources(userId: number): Promise<Resources> {
   return getResources(`${API_BASE}/api/resources/user/${userId}`)
 }
 

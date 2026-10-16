@@ -55,25 +55,39 @@ CREATE TABLE IF NOT EXISTS daily_content (
     REFERENCES church_groups (name) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- The Resources pane's list of hymns for a user or group, assigned to exactly
+-- The Resources pane's standing content for a user or group, assigned to exactly
 -- one of them (never both, never neither — see the CHECK constraint), same
 -- shape as daily_content's targeting. Unlike daily_content, resources are not
 -- date-scoped — they're a standing list that doesn't rotate day to day.
--- Stores only a reference (song_slug) into the song catalog, not the hymn's
--- content itself — see server/data/songs.json and server/src/models/songCatalog.ts,
--- which resolves a slug (e.g. "GFH2_1") to title/verses/audio at read time.
+-- Each row is one item in one of three sections, chosen by kind:
+--   song    a hymn, stored only as a reference (song_slug) into the song catalog
+--           (server/data/songs.json, resolved by server/src/models/songCatalog.ts)
+--   message a short message with a title and a url (an mp3 or a YouTube link)
+--   text    preset text with a title and a body
+-- sort_order orders items within a kind. A user with any resources rows sees
+-- only their own, otherwise the group's rows apply (decided by the client).
+-- Existing databases need server/sql/migrations/001_resources_kinds.sql applied once.
 CREATE TABLE IF NOT EXISTS resources (
   id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   user_id       INT UNSIGNED NULL,
   group_id      VARCHAR(50)  NULL,
+  kind          ENUM('song', 'message', 'text') NOT NULL DEFAULT 'song',
   sort_order    SMALLINT UNSIGNED NOT NULL DEFAULT 0,
-  song_slug     VARCHAR(50)  NOT NULL,
+  song_slug     VARCHAR(50)  NULL,
+  title         VARCHAR(200) NULL,
+  url           VARCHAR(500) NULL,
+  body          TEXT         NULL,
   created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  INDEX idx_resources_user (user_id, sort_order),
-  INDEX idx_resources_group (group_id, sort_order),
+  INDEX idx_resources_user (user_id, kind, sort_order),
+  INDEX idx_resources_group (group_id, kind, sort_order),
   CONSTRAINT chk_resources_one_target CHECK (
     (user_id IS NULL) <> (group_id IS NULL)
+  ),
+  CONSTRAINT chk_resources_kind_fields CHECK (
+    (kind = 'song' AND song_slug IS NOT NULL) OR
+    (kind = 'message' AND title IS NOT NULL AND url IS NOT NULL) OR
+    (kind = 'text' AND title IS NOT NULL AND body IS NOT NULL)
   ),
   CONSTRAINT fk_resources_user FOREIGN KEY (user_id)
     REFERENCES users (id) ON DELETE CASCADE,
