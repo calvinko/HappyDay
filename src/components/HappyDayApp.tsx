@@ -23,7 +23,6 @@ import {
 import {
   BUILTIN_GROUPS,
   GROUP_CONTENT,
-  HYMNS,
   TODAY,
   VERSES,
   type Hymn,
@@ -44,8 +43,8 @@ function Markdown({ children }: { children: string }) {
   )
 }
 
-// Server-backed resources have a stable numeric id; the static HYMNS
-// fallback doesn't, so its hymn number stands in as the key.
+// Server-backed resources have a stable numeric id; hymn number is the
+// key for any entry without one.
 function hymnKey(h: Hymn): string | number {
   return h.id ?? h.no
 }
@@ -392,7 +391,7 @@ function HappyDayApp({
 
   // Prefers the server's content for today; falls back to the static
   // GROUP_CONTENT placeholder on a fetch error or when nothing's assigned yet,
-  // and further to the static HYMNS/TODAY data when the group has neither.
+  // and further to the static TODAY data when the group has neither.
   const groupContent = fetchedContent
     ? {
         passage: fetchedContent.passage,
@@ -402,14 +401,13 @@ function HappyDayApp({
       }
     : GROUP_CONTENT[group]
   // The server supplies default songs when a group has no resources of its
-  // own (DEFAULT_RESOURCE_ROWS in server/src/models/resource.ts), so the
-  // static HYMNS only cover the server being unreachable.
-  const hymns: Hymn[] = fetchedResources.songs.length
-    ? fetchedResources.songs
-    : HYMNS
+  // own (DEFAULT_RESOURCE_ROWS in server/src/models/resource.ts). The client
+  // has no song catalog, so this is empty only while loading or if the
+  // server is unreachable.
+  const hymns: Hymn[] = fetchedResources.songs
   const content = groupContent ?? {
     passage: TODAY.passageRef,
-    song: hymns[0].title,
+    song: hymns[0]?.title ?? '',
     supplementary: null,
   }
   const signedIn = name !== ''
@@ -697,16 +695,18 @@ function HappyDayApp({
                 </span>
                 <span className="text-base">{read ? '✓' : ''}</span>
               </button>
-              <button
-                type="button"
-                onClick={() => openHymn(hymns[0], 'home')}
-                className="mt-5 flex w-full items-center gap-2.5 border-t border-ink/40 pt-3.5 text-left text-sm font-bold"
-              >
-                <span className="flex-1">
-                  Next: hymn {hymns[0].no}, {hymns[0].title}
-                </span>
-                <span className="text-accent-700">&rarr;</span>
-              </button>
+              {hymns[0] && (
+                <button
+                  type="button"
+                  onClick={() => openHymn(hymns[0], 'home')}
+                  className="mt-5 flex w-full items-center gap-2.5 border-t border-ink/40 pt-3.5 text-left text-sm font-bold"
+                >
+                  <span className="flex-1">
+                    Next: hymn {hymns[0].no}, {hymns[0].title}
+                  </span>
+                  <span className="text-accent-700">&rarr;</span>
+                </button>
+              )}
             </div>
           </div>
         )}

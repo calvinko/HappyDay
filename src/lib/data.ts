@@ -24,29 +24,6 @@ export type Hymn = {
   songUrl?: string | null
 }
 
-export const HYMNS: Hymn[] = [
-  {
-    no: '021',
-    title: 'Holy, Holy, Holy',
-    meta: 'Reginald Heber, 1826 · 4 verses',
-    verses: [
-      'Holy, holy, holy! Lord God Almighty!\nEarly in the morning our song shall rise to thee;\nHoly, holy, holy! merciful and mighty!\nGod in three Persons, blessed Trinity!',
-      'Holy, holy, holy! all the saints adore thee,\nCasting down their golden crowns around the glassy sea;\nCherubim and seraphim falling down before thee,\nWhich wert, and art, and evermore shalt be.',
-      'Holy, holy, holy! though the darkness hide thee,\nThough the eye of sinful man thy glory may not see;\nOnly thou art holy; there is none beside thee,\nPerfect in power, in love, and purity.',
-    ],
-  },
-  {
-    no: '187',
-    title: 'Amazing Grace',
-    meta: 'John Newton, 1779 · 3 verses',
-    verses: [
-      'Amazing grace! how sweet the sound,\nThat saved a wretch like me!\nI once was lost, but now am found,\nWas blind, but now I see.',
-      "'Twas grace that taught my heart to fear,\nAnd grace my fears relieved;\nHow precious did that grace appear\nThe hour I first believed.",
-      "Through many dangers, toils and snares,\nI have already come;\n'Tis grace hath brought me safe thus far,\nAnd grace will lead me home.",
-    ],
-  },
-]
-
 function formatDateLong(date: Date): string {
   return date.toLocaleDateString('en-US', {
     weekday: 'short',
