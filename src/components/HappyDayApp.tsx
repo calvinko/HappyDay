@@ -43,6 +43,18 @@ function Markdown({ children }: { children: string }) {
   )
 }
 
+// Song content may lead with a "T:<title>" line — if so, that's the hymn
+// title and the rest of the lines are the lyrics; otherwise the whole string
+// is lyrics with no separate title.
+function parseSongTitle(song: string): { title: string; body: string } {
+  const [firstLine, ...rest] = song.split('\n')
+  const trimmedFirst = firstLine?.trim() ?? ''
+  if (!trimmedFirst.startsWith('T:')) {
+    return { title: '', body: song }
+  }
+  return { title: trimmedFirst.slice(2).trim(), body: rest.join('\n').trim() }
+}
+
 // Server-backed resources have a stable numeric id; hymn number is the
 // key for any entry without one.
 function hymnKey(h: Hymn): string | number {
@@ -405,9 +417,24 @@ function HappyDayApp({
   // has no song catalog, so this is empty only while loading or if the
   // server is unreachable.
   const hymns: Hymn[] = fetchedResources.songs
+  // The home screen's "Today's hymns" come from today's daily content (its
+  // single song/songUrl), falling back to the resource songs when none is set.
+  const dailySong = groupContent?.song.trim() ? parseSongTitle(groupContent.song) : null
+  const todayHymns: Hymn[] =
+    groupContent && dailySong
+      ? [
+          {
+            no: '—',
+            title: dailySong.title,
+            meta: '',
+            verses: dailySong.body ? [dailySong.body] : [],
+            songUrl: groupContent.songUrl,
+          },
+        ]
+      : hymns
   const content = groupContent ?? {
     passage: TODAY.passageRef,
-    song: hymns[0]?.title ?? '',
+    song: todayHymns[0]?.title ?? '',
     supplementary: null,
   }
   const signedIn = name !== ''
@@ -427,7 +454,8 @@ function HappyDayApp({
       ? adminTarget.id !== ''
       : Number.isInteger(adminTarget.id) && adminTarget.id > 0
   const selectedHymn =
-    hymns.find((h) => hymnKey(h) === selectedHymnKey) ?? hymns[0]
+    [...todayHymns, ...hymns].find((h) => hymnKey(h) === selectedHymnKey) ??
+    todayHymns[0]
 
   const openHymn = (h: Hymn, from: 'home' | 'resources') => {
     setSelectedHymnKey(hymnKey(h))
@@ -601,7 +629,7 @@ function HappyDayApp({
 
             <section className="px-[18px] pt-5 pb-2">
               <div className={`${KICKER} mb-3.5`}>TODAY&rsquo;S HYMNS</div>
-              {hymns.map((h) => (
+              {todayHymns.map((h) => (
                 <div key={hymnKey(h)} className="border-t border-ink/40 py-3.5 today-hymn">
                   <div className="flex items-center gap-3.5">
                     <span className="min-w-[54px] text-[26px] font-extrabold text-ash-400">
@@ -695,14 +723,14 @@ function HappyDayApp({
                 </span>
                 <span className="text-base">{read ? '✓' : ''}</span>
               </button>
-              {hymns[0] && (
+              {todayHymns[0] && (
                 <button
                   type="button"
-                  onClick={() => openHymn(hymns[0], 'home')}
+                  onClick={() => openHymn(todayHymns[0], 'home')}
                   className="mt-5 flex w-full items-center gap-2.5 border-t border-ink/40 pt-3.5 text-left text-sm font-bold"
                 >
                   <span className="flex-1">
-                    Next: hymn {hymns[0].no}, {hymns[0].title}
+                    Next: hymn {todayHymns[0].no}, {todayHymns[0].title}
                   </span>
                   <span className="text-accent-700">&rarr;</span>
                 </button>
