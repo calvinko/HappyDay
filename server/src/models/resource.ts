@@ -80,8 +80,10 @@ function buildResources(rows: ResourceRow[]): Resources {
 // client's user-then-group lookup, to users whose group has none either).
 // Same row shape as the table, so they resolve through buildResources.
 const DEFAULT_RESOURCE_ROWS: ResourceRow[] = [
-  { id: -1, kind: 'song', song_slug: 'S1_222', title: null, url: null, body: null },
-  { id: -2, kind: 'song', song_slug: 'H2_45', title: null, url: null, body: null },
+  { id: -1, kind: 'song', song_slug: 'CSTND_5', title: null, url: null, body: null },
+  { id: -2, kind: 'song', song_slug: 'S1_222', title: null, url: null, body: null },
+  { id: -3, kind: 'song', song_slug: 'H2_45', title: null, url: null, body: null },
+  { id: -4, kind: 'song', song_slug: 'H1_7', title: null, url: null, body: null },
 ] as ResourceRow[]
 
 const COLUMNS = 'id, kind, song_slug, title, url, body'
