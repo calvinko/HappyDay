@@ -839,7 +839,7 @@ function HappyDayApp({
                     className="flex-1 whitespace-pre-line leading-[1.7] [text-wrap:pretty]"
                     style={{ fontSize: size }}
                   >
-                    <Markdown>{v}</Markdown>
+                    {hymnFrom === 'resources' ? v : <Markdown>{v}</Markdown>}
                   </span>
                 </p>
               ))}
