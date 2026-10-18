@@ -830,19 +830,30 @@ function HappyDayApp({
                   src={selectedHymn.songUrl}
                 />
               )}
-              {selectedHymn.verses.map((v, i) => (
-                <p key={i} className="mb-4 flex items-start gap-2.5">
-                  <span className="min-w-[18px] pt-1 text-[11px] font-bold text-accent">
-                    {i + 1}
-                  </span>
-                  <span
-                    className="flex-1 whitespace-pre-line leading-[1.7] [text-wrap:pretty]"
-                    style={{ fontSize: size }}
-                  >
-                    {hymnFrom === 'resources' ? v : <Markdown>{v}</Markdown>}
-                  </span>
+              {hymnFrom === 'resources' ? (
+                // Catalog lyrics are plain text (already carrying their own
+                // verse numbers and line breaks), so show them as one block.
+                <p
+                  className="whitespace-pre-wrap leading-[1.7]"
+                  style={{ fontSize: size }}
+                >
+                  {selectedHymn.verses.join('\n\n')}
                 </p>
-              ))}
+              ) : (
+                selectedHymn.verses.map((v, i) => (
+                  <p key={i} className="mb-4 flex items-start gap-2.5">
+                    <span className="min-w-[18px] pt-1 text-[11px] font-bold text-accent">
+                      {i + 1}
+                    </span>
+                    <span
+                      className="flex-1 whitespace-pre-line leading-[1.7] [text-wrap:pretty]"
+                      style={{ fontSize: size }}
+                    >
+                      <Markdown>{v}</Markdown>
+                    </span>
+                  </p>
+                ))
+              )}
             </div>
           </div>
         )}
