@@ -6,8 +6,10 @@ import type { Resources } from './api'
 // server's resources table (see DEFAULT_RESOURCE_ROWS in
 // server/src/models/resource.ts, which should list the same slugs).
 export const DEFAULT_RESOURCE_ROWS = [
+  { kind: 'song', songSlug: 'CSTND_5' },
   { kind: 'song', songSlug: 'S1_222' },
   { kind: 'song', songSlug: 'H2_45' },
+  { kind: 'song', songSlug: 'H1_7' }
 ] as const
 
 // The client has no copy of server/data/songs.json (it's far too large to
