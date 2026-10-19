@@ -73,6 +73,7 @@ export const BUILTIN_GROUPS: Record<string, string[]> = {
     'May Tsui',
     'Catherine',
     'Rick Ng',
+    'ChoiPing Wu',
     'Yvonne Ho',
   ],
   sf_senior: ['James Leung', 'Linda Chiu', 'Patrick Chiu'],
